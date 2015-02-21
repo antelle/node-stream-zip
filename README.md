@@ -7,6 +7,12 @@ Features:
 - large archives support  
 - all operations are non-blocking  
 - fast initialization  
+- no dependencies or binary addons  
+- decompression with built-in zlib streams
+
+# Warning: alpha version
+
+The project is in active development for now, approx stable release with tests and bugfixes in March'15. 
 
 # Installation
 
