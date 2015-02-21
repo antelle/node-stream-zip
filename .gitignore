@@ -1,0 +1,6 @@
+workspace.xml
+.DS_Store
+node_modules/
+build/
+resources/lib
+*.log
