@@ -87,7 +87,7 @@ function testFileOk(file, test) {
 
 function rmdirSync(dir) {
     var list = fs.readdirSync(dir);
-    for(var i = 0; i < list.length; i++) {
+    for (var i = 0; i < list.length; i++) {
         var filename = path.join(dir, list[i]);
         var stat = fs.statSync(filename);
 
@@ -98,7 +98,9 @@ function rmdirSync(dir) {
             fs.unlinkSync(filename);
         }
     }
-    fs.rmdirSync(dir);
+    try {
+        fs.rmdirSync(dir);
+    } catch (err) {}
 }
 
 module.exports.ok = {};
@@ -150,13 +152,22 @@ module.exports.error['rar.rar'] = function(test) {
     });
 };
 module.exports.error['corrupt_entry.zip'] = function(test) {
-    test.expect(1);
+    test.expect(2);
     var zip = new StreamZip({ file: 'test/err/corrupt_entry.zip' });
     zip.on('ready', function() {
-        zip.extract('doc/api_assets/logo.svg', testPathTmp, function(err, res) {
-            test.ok(err);
-            test.done();
+        var oneEntry = new Promise(function(resolve) {
+            zip.extract('doc/api_assets/logo.svg', testPathTmp, function (err) {
+                test.ok(err);
+                resolve();
+            });
         });
+        var allEntries = new Promise(function(resolve) {
+            zip.extract('', testPathTmp, function (err) {
+                test.ok(err);
+                resolve();
+            });
+        });
+        Promise.all([oneEntry, allEntries]).then(function() { test.done(); });
     });
 };
 

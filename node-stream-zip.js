@@ -323,17 +323,32 @@ var StreamZip = function(config) {
             if (err) {
                 callback(err);
             } else {
-                var fsStm = fs.createWriteStream(outPath);
-                stm.on('end', function () {
-                    fsStm.close(function() {
-                        that.emit('extract', entry, outPath);
-                        callback();
-                    });
-                }).pipe(fsStm);
+                var fsStm, errThrown;
                 stm.on('error', function(err) {
-                    fsStm.close(function() {
-                        callback(err);
+                    errThrown = err;
+                    if (fsStm) {
+                        stm.unpipe(fsStm);
+                        fsStm.close(function () {
+                            callback(err);
+                        });
+                    }
+                });
+                fs.open(outPath, 'w', function(err, fdFile) {
+                    if (err)
+                        return callback(err || errThrown);
+                    if (errThrown) {
+                        fs.close(fd, function() {
+                            callback(errThrown);
+                        });
+                        return;
+                    }
+                    fsStm = fs.createWriteStream(outPath, { fd: fdFile });
+                    fsStm.on('finish', function() {
+                        that.emit('extract', entry, outPath);
+                        if (!errThrown)
+                            callback();
                     });
+                    stm.pipe(fsStm);
                 });
             }
         });
@@ -370,7 +385,7 @@ var StreamZip = function(config) {
             if (entry) {
                 entryName = entry.name;
             } else {
-                if (entryName[entryName.length - 1] !== '/')
+                if (entryName.length && entryName[entryName.length - 1] !== '/')
                     entryName += '/';
             }
         }

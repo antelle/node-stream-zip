@@ -1,8 +1,8 @@
 console.log('Loading zip...');
 var StreamZip = require('./node-stream-zip.js');
 var zip = new StreamZip({
-    file: './test/ok/normal.zip',
-    storeEntries: true
+    file: './test/ok/normal.zip'
+    //file: 'd:/temp/node_src.zip'
 });
 //zip.on('error', function(err) { console.error('ERROR: ' + err); });
 zip.on('ready', function() {
@@ -18,7 +18,7 @@ zip.on('ready', function() {
     //    console.log('Entry extracted');
     //});
     zip.extract(null, 'd:/temp/ext', function(err, count) {
-        console.log('Extracted ' + count + ' entries');
+        console.log(err ? err : ('Extracted ' + count + ' entries'));
     });
 });
 zip.on('extract', function(entry, file) {
