@@ -10,7 +10,7 @@ var
     fs = require('fs'),
     path = require('path'),
     events = require('events'),
-    zlib = require('zlib')
+    zlib = require('zlib'),
     stream = require('stream');
 
 // endregion
@@ -96,6 +96,7 @@ var consts = {
     FLG_STR          : 16, // strong encryption
     FLG_LNG          : 1024, // language encoding
     FLG_MSK          : 4096, // mask header values
+    FLG_ENTRY_ENC    : 1,
 
     /* 4.5 Extensible data fields */
     EF_ID            : 0,
@@ -210,6 +211,8 @@ var StreamZip = function(config) {
         }
         op.lastPos = pos + 1;
         op.chunkSize *= 2;
+        if (pos <= minPos)
+            return that.emit('error', 'Bad archive');
         var expandLength = Math.min(op.chunkSize, pos - minPos);
         op.win.expandLeft(expandLength, readCentralDirectoryCallback);
     }
@@ -298,12 +301,16 @@ var StreamZip = function(config) {
                 entry.readDataHeader(buffer);
                 var offset = entry.offset + consts.LOCHDR + entry.fnameLen + entry.extraLen;
                 var entryStream = new EntryDataReaderStream(fd, offset, entry.compressedSize);
-                if (entry.method === consts.STORED) {
-                    callback(null, entryStream);
-                } else if (entry.method === consts.DEFLATED) {
-                    callback(null, entryStream.pipe(zlib.createInflateRaw()));
+                if (entry.encrypted) {
+                    return callback('Entry encrypted');
                 } else {
-                    callback('Unknown compression method: ' + entry.method);
+                    if (entry.method === consts.STORED) {
+                        callback(null, entryStream);
+                    } else if (entry.method === consts.DEFLATED || entry.method === consts.ENHANCED_DEFLATED) {
+                        callback(null, entryStream.pipe(zlib.createInflateRaw()));
+                    } else {
+                        callback('Unknown compression method: ' + entry.method);
+                    }
                 }
             } catch (ex) {
                 callback(ex);
@@ -316,10 +323,18 @@ var StreamZip = function(config) {
             if (err) {
                 callback(err);
             } else {
+                var fsStm = fs.createWriteStream(outPath);
                 stm.on('end', function () {
-                    that.emit('extract', entry, outPath);
-                    callback();
-                }).pipe(fs.createWriteStream(outPath));
+                    fsStm.close(function() {
+                        that.emit('extract', entry, outPath);
+                        callback();
+                    });
+                }).pipe(fsStm);
+                stm.on('error', function(err) {
+                    fsStm.close(function() {
+                        callback(err);
+                    });
+                });
             }
         });
     }
@@ -341,7 +356,9 @@ var StreamZip = function(config) {
             return callback(null, extractedCount);
         var file = files.shift();
         var targetPath = path.join(baseDir, file.name.replace(baseRelPath, ''));
-        extract(file, targetPath, function () {
+        extract(file, targetPath, function (err) {
+            if (err)
+                return callback(err, extractedCount);
             extractFiles(baseDir, baseRelPath, files, callback, extractedCount + 1);
         });
     }
@@ -352,11 +369,12 @@ var StreamZip = function(config) {
             if (!entry)
                 return callback('Entry not found');
         }
-        if (entry.isDirectory) {
+        var entryName = entry && entry.name || '';
+        if (!entry || entry.isDirectory) {
             var files = [], dirs = [];
             for (var e in entries) {
-                if (Object.prototype.hasOwnProperty.call(entries, e) && e.lastIndexOf(entry.name, 0) === 0) {
-                    var relPath = e.replace(entry.name, '');
+                if (Object.prototype.hasOwnProperty.call(entries, e) && e.lastIndexOf(entryName, 0) === 0) {
+                    var relPath = e.replace(entryName, '');
                     var childEntry = entries[e];
                     if (childEntry.isDirectory) {
                         var parts = relPath.split('/').filter(function(f) { return f; });
@@ -373,10 +391,10 @@ var StreamZip = function(config) {
                     if (err)
                         callback(err);
                     else
-                        extractFiles(outPath, entry.name, files, callback, 0);
+                        extractFiles(outPath, entryName, files, callback, 0);
                 });
             } else {
-                extractFiles(outPath, entry.name, files, callback, 0);
+                extractFiles(outPath, entryName, files, callback, 0);
             }
         } else {
             fs.stat(outPath, function(err, stat) {
@@ -494,7 +512,6 @@ ZipEntry.prototype.read = function(data, offset) {
     this.name = data.slice(offset, offset += this.fnameLen).toString();
     var lastChar = data[offset - 1];
     this.isDirectory = (lastChar == 47) || (lastChar == 92);
-    this.isFile = !this.isDirectory;
 
     if (this.extraLen) {
         this.readExtra(data, offset);
@@ -530,6 +547,14 @@ ZipEntry.prototype.parseZip64Extra = function(data, offset, length) {
 ZipEntry.prototype.readUInt64LE = function(buffer, offset) {
     return (buffer.readUInt32LE(offset + 4) << 4) + buffer.readUInt32LE(offset);
 };
+
+Object.defineProperty(ZipEntry.prototype, 'encrypted', {
+    get: function() { return (this.flags & consts.FLG_ENTRY_ENC) == consts.FLG_ENTRY_ENC; }
+});
+
+Object.defineProperty(ZipEntry.prototype, 'isFile', {
+    get: function() { return !this.isDirectory; }
+});
 
 // endregion
 

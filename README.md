@@ -5,14 +5,11 @@ Features:
 
 - it never loads entire archive into memory, everything is read by chunks  
 - large archives support  
-- all operations are non-blocking  
+- all operations are non-blocking, no sync i/o  
 - fast initialization  
-- no dependencies or binary addons  
-- decompression with built-in zlib streams
-
-# Warning: alpha version
-
-The project is in active development for now, approx stable release with tests and bugfixes in March'15. 
+- no dependencies, no binary addons  
+- decompression with built-in zlib module
+- deflate, deflate64, sfx  
 
 # Installation
 
@@ -21,32 +18,52 @@ The project is in active development for now, approx stable release with tests a
 # Usage
 
 ```javascript
-var StreamZip = require('./node-stream-zip.js');  
+var StreamZip = require('node-stream-zip');  
 var zip = new StreamZip({  
     file: 'archive.zip',  
     storeEntries: true    
 });
-zip.on('error', function(err) { console.error('ERROR: ' + err); });
+zip.on('error', function(err) { /*handle*/ });
 zip.on('ready', function() {
-    // console.log('Loaded. Entries read: ' + zip.entriesCount);
+    console.log('Entries read: ' + zip.entriesCount);
     // stream to stdout
     zip.stream('node/benchmark/net/tcp-raw-c2s.js', function(err, stm) {
         stm.pipe(process.stdout);
     });
-    // stream to file
-    zip.extract('node/benchmark/net/tcp-raw-c2s.js', 'd:/temp/', function(err) {
+    // extract file
+    zip.extract('node/benchmark/net/tcp-raw-c2s.js', './temp/', function(err) {
         console.log('Entry extracted');
     });
-    // stream folder
-    zip.extract('node/benchmark/', 'd:/temp/ext', function(err, count) {
+    // extract folder
+    zip.extract('node/benchmark/', './temp/', function(err, count) {
+        console.log('Extracted ' + count + ' entries');
+    });
+    // extract all
+    zip.extract(null, './temp/', function(err, count) {
         console.log('Extracted ' + count + ' entries');
     });
 });
 zip.on('extract', function(entry, file) {
-    console.log('extract', entry.name, file);
+    console.log('Extracted ' + entry.name + ' to ' + file);
+});
+zip.on('entry', function(entry) {
+    // called on load, when entry description has been read
+    // you can already stream this entry, without waiting until all entry descriptions are read (suitable for very large archives) 
+    console.log('Read entry ', entry.name);
 });
 ```
 
+# Building
+
+The project doesn't require building. To run unit tests with [nodeunit](https://github.com/caolan/nodeunit):  
+`$ npm test`
+
+# Known issues
+
+- [utf8](https://github.com/rubyzip/rubyzip/wiki/Files-with-non-ascii-filenames) file names  
+- mac osx zip files  
+- AES encrypted files  
+
 # Contributors
 
-ZIP parsing code has been forked from [adm-zip](https://github.com/cthackers/adm-zip)
+ZIP parsing code has been partially forked from [cthackers/adm-zip](https://github.com/cthackers/adm-zip) (MIT license). 

@@ -1,34 +1,38 @@
 {
-    "name": "node-stream-zip",
-    "version": "0.1.0",
-    "description": "node.js library for reading and extraction of ZIP archives",
-    "keywords": [
-        "zip",
-        "archive",
-        "unzip",
-        "stream"
-    ],
-    "homepage": "https://github.com/antelle/node-stream-zip",
-    "author": "Antelle <antelle.net@gmail.com> (https://github.com/antelle)",
-    "bugs": {
-        "email": "antelle.net@gmail.com",
-        "url": "https://github.com/antelle/node-stream-zip/issues"
-    },
-    "licenses": [
-        {
-            "type": "MIT",
-            "url": "https://github.com/antelle/node-stream-zip/blob/master/MIT-LICENSE.txt"
-        }
-    ],
-    "files": [
-        "node-stream-zip.js"
-    ],
-    "main": "node-stream-zip.js",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/antelle/node-stream-zip.git"
-    },
-    "engines": {
-        "node": ">=0.10.0"
+  "name": "node-stream-zip",
+  "version": "0.2.0",
+  "description": "node.js library for reading and extraction of ZIP archives",
+  "keywords": [
+    "zip",
+    "archive",
+    "unzip",
+    "stream"
+  ],
+  "homepage": "https://github.com/antelle/node-stream-zip",
+  "author": "Antelle <antelle.net@gmail.com> (https://github.com/antelle)",
+  "bugs": {
+    "email": "antelle.net@gmail.com",
+    "url": "https://github.com/antelle/node-stream-zip/issues"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/antelle/node-stream-zip/blob/master/MIT-LICENSE.txt"
     }
+  ],
+  "files": [
+    "node-stream-zip.js"
+  ],
+  "scripts": {
+    "test": "nodeunit test/tests.js"
+  },
+  "main": "node-stream-zip.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/antelle/node-stream-zip.git"
+  },
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "devDependencies": {}
 }
