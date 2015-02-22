@@ -548,7 +548,7 @@ ZipEntry.prototype.readExtra = function(data, offset) {
         signature = data.readUInt16LE(offset);
         offset += 2;
         size = data.readUInt16LE(offset);
-        offset += 2 + size;
+        offset += 2;
         if (consts.ID_ZIP64 === signature) {
             this.parseZip64Extra(data, offset, size);
         }
