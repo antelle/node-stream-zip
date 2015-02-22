@@ -14,7 +14,7 @@ zip.on('ready', function() {
     //    console.log('Entry data:\n');
     //    stm.pipe(process.stdout);
     //});
-    //zip.extract('node/benchmark/net/tcp-raw-c2s.js', 'd:/temp/', function(err) {
+    //zip.extract('README.md', 'd:/temp/ext/', function(err) {
     //    console.log('Entry extracted');
     //});
     zip.extract(null, 'd:/temp/ext', function(err, count) {

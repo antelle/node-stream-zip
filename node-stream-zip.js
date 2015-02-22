@@ -364,24 +364,31 @@ var StreamZip = function(config) {
     }
 
     this.extract = function(entry, outPath, callback) {
+        var entryName = entry || '';
         if (typeof entry === 'string') {
             entry = this.entry(entry);
-            if (!entry)
-                return callback('Entry not found');
+            if (entry) {
+                entryName = entry.name;
+            } else {
+                if (entryName[entryName.length - 1] !== '/')
+                    entryName += '/';
+            }
         }
-        var entryName = entry && entry.name || '';
         if (!entry || entry.isDirectory) {
-            var files = [], dirs = [];
+            var files = [], dirs = [], allDirs = {};
             for (var e in entries) {
                 if (Object.prototype.hasOwnProperty.call(entries, e) && e.lastIndexOf(entryName, 0) === 0) {
                     var relPath = e.replace(entryName, '');
                     var childEntry = entries[e];
-                    if (childEntry.isDirectory) {
-                        var parts = relPath.split('/').filter(function(f) { return f; });
+                    if (childEntry.isFile) {
+                        files.push(childEntry);
+                        relPath = path.dirname(relPath);
+                    }
+                    if (relPath && !allDirs[relPath] && relPath[0] !== '.') {
+                        allDirs[relPath] = true;
+                        var parts = relPath.split('/').filter(function (f) { return f; });
                         if (parts.length)
                             dirs.push(parts);
-                    } else {
-                        files.push(childEntry);
                     }
                 }
             }
@@ -497,11 +504,11 @@ ZipEntry.prototype.readDataHeader = function(data) {
     // modification time (2 bytes time ; 2 bytes date)
     this.time = data.readUInt32LE(consts.LOCTIM);
     // uncompressed file crc-32 value
-    this.crc = data.readUInt32LE(consts.LOCCRC);
+    this.crc = data.readUInt32LE(consts.LOCCRC) || this.crc;
     // compressed size
-    this.compressedSize = data.readUInt32LE(consts.LOCSIZ);
+    this.compressedSize = data.readUInt32LE(consts.LOCSIZ) || this.compressedSize;
     // uncompressed size
-    this.size = data.readUInt32LE(consts.LOCLEN);
+    this.size = data.readUInt32LE(consts.LOCLEN) || this.size;
     // filename length
     this.fnameLen = data.readUInt16LE(consts.LOCNAM);
     // extra field length

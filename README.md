@@ -9,7 +9,7 @@ Features:
 - fast initialization  
 - no dependencies, no binary addons  
 - decompression with built-in zlib module
-- deflate, deflate64, sfx  
+- deflate, deflate64, sfx, macosx/windows built-in archives  
 
 # Installation
 
@@ -60,8 +60,7 @@ The project doesn't require building. To run unit tests with [nodeunit](https://
 
 # Known issues
 
-- [utf8](https://github.com/rubyzip/rubyzip/wiki/Files-with-non-ascii-filenames) file names  
-- mac osx zip files  
+- [utf8](https://github.com/rubyzip/rubyzip/wiki/Files-with-non-ascii-filenames) file names
 - AES encrypted files  
 
 # Contributors

@@ -8,14 +8,22 @@ var
     contentPath = 'test/content/';
 
 function testFileOk(file, test) {
+    var expEntriesCount = 10,
+        expEntriesCountInDocDir = 4;
+    if (file === 'osx.zip') {
+        expEntriesCount = 25;
+        expEntriesCountInDocDir = 5;
+    } else if (file === 'windows.zip') {
+        expEntriesCount = 8;
+    }
     test.expect(22);
     var zip = new StreamZip({ file: 'test/ok/' + file });
     zip.on('ready', function() {
-        test.equal(zip.entriesCount, 10);
+        test.equal(zip.entriesCount, expEntriesCount);
         var entries = zip.entries();
 
-        var containsAll = ['BSDmakefile', 'README.md', 'doc/', 'doc/api_assets/', 'doc/api_assets/logo.svg',
-            'doc/api_assets/sh.css', 'doc/changelog-foot.html', 'doc/sh_javascript.min.js', 'empty folder/'
+        var containsAll = ['BSDmakefile', 'README.md', 'doc/api_assets/logo.svg',
+            'doc/api_assets/sh.css', 'doc/changelog-foot.html', 'doc/sh_javascript.min.js'
         ].every(function(expFile) { return entries[expFile]; });
         test.ok(containsAll);
 
@@ -27,9 +35,10 @@ function testFileOk(file, test) {
         test.ok(entry.isFile);
 
         var dirEntry = zip.entry('doc/');
-        test.ok(dirEntry);
-        test.ok(dirEntry.isDirectory);
-        test.ok(!dirEntry.isFile);
+        var dirShouldExist = file !== 'windows.zip'; // windows archives can contain not all directories
+        test.ok(!dirShouldExist || dirEntry);
+        test.ok(!dirShouldExist || dirEntry.isDirectory);
+        test.ok(!dirShouldExist || !dirEntry.isFile);
 
         var filePromise = new Promise(function(resolve) {
             zip.extract('README.md', testPathTmp + 'README.md', function(err, res) {
@@ -52,7 +61,7 @@ function testFileOk(file, test) {
         var folderPromise = new Promise(function(resolve) {
             zip.extract('doc/', testPathTmp, function(err, res) {
                 test.equal(err, null);
-                test.equal(res, 4);
+                test.equal(res, expEntriesCountInDocDir);
                 test.equal(fs.readFileSync(contentPath + 'doc/api_assets/sh.css', 'utf8'),
                     fs.readFileSync(testPathTmp + 'api_assets/sh.css', 'utf8'));
                 resolve();
