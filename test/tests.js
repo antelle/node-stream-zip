@@ -6,7 +6,7 @@ var
 var
     testPathTmp,
     testNum = 0,
-    baseBathTmp = 'test/.tmp/',
+    basePathTmp = 'test/.tmp/',
     contentPath = 'test/content/';
 
 function testFileOk(file, test) {
@@ -211,19 +211,18 @@ module.exports.parallel['streaming 100 files'] = function(test) {
 };
 
 module.exports.setUp = function(done) {
-    testPathTmp = baseBathTmp + testNum++ + '/';
-    if (!fs.existsSync(baseBathTmp))
-        fs.mkdirSync(baseBathTmp);
+    testPathTmp = basePathTmp + testNum++ + '/';
+    if (!fs.existsSync(basePathTmp))
+        fs.mkdirSync(basePathTmp);
     if (fs.existsSync(testPathTmp))
         rmdirSync(testPathTmp);
     fs.mkdirSync(testPathTmp);
     done();
 };
 module.exports.tearDown = function(done) {
-    //rmdirSync(testPathTmp);
     done();
 };
 
 process.on('exit', function() {
-    rmdirSync(baseBathTmp);
+    rmdirSync(basePathTmp);
 });
