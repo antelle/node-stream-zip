@@ -190,6 +190,25 @@ module.exports.error['bad_crc.zip'] = function(test) {
     });
 };
 
+module.exports.parallel = {};
+module.exports.parallel['streaming 100 files'] = function(test) {
+    var num = 100;
+    test.expect(num);
+    var zip = new StreamZip({ file: 'test/ok/normal.zip' });
+    zip.on('ready', function() {
+        var extracted = 0;
+        var files = ['doc/changelog-foot.html', 'doc/sh_javascript.min.js', 'BSDmakefile', 'README.md'];
+        for (var i = 0; i < num; i++) {
+            var file = files[Math.floor(Math.random() * files.length)];
+            zip.extract(file, testPathTmp + i, function (err) {
+                test.equal(err, null);
+                if (++extracted === num)
+                    test.done();
+            });
+        }
+    });
+};
+
 module.exports.setUp = function(done) {
     testPathTmp = baseBathTmp + testNum++ + '/';
     if (fs.existsSync(testPathTmp))
