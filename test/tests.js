@@ -46,8 +46,7 @@ function testFileOk(file, test) {
             zip.extract('README.md', testPathTmp + 'README.md', function(err, res) {
                 test.equal(err, null);
                 test.ok(1, res);
-                test.equal(fs.readFileSync(contentPath + 'README.md', 'utf8'),
-                    fs.readFileSync(testPathTmp + 'README.md', 'utf8'));
+                assertFilesEqual(test, contentPath + 'README.md', testPathTmp + 'README.md');
                 resolve();
             });
         });
@@ -55,8 +54,7 @@ function testFileOk(file, test) {
             zip.extract('README.md', testPathTmp, function(err, res) {
                 test.equal(err, null);
                 test.ok(1, res);
-                test.equal(fs.readFileSync(contentPath + 'README.md', 'utf8'),
-                    fs.readFileSync(testPathTmp + 'README.md', 'utf8'));
+                assertFilesEqual(test, contentPath + 'README.md', testPathTmp + 'README.md');
                 resolve();
             });
         });
@@ -64,8 +62,7 @@ function testFileOk(file, test) {
             zip.extract('doc/', testPathTmp, function(err, res) {
                 test.equal(err, null);
                 test.equal(res, expEntriesCountInDocDir);
-                test.equal(fs.readFileSync(contentPath + 'doc/api_assets/sh.css', 'utf8'),
-                    fs.readFileSync(testPathTmp + 'api_assets/sh.css', 'utf8'));
+                assertFilesEqual(test, contentPath + 'doc/api_assets/sh.css', testPathTmp + 'api_assets/sh.css');
                 resolve();
             });
         });
@@ -73,10 +70,8 @@ function testFileOk(file, test) {
             zip.extract(null, testPathTmp, function(err, res) {
                 test.equal(err, null);
                 test.ok(7, res);
-                test.equal(fs.readFileSync(contentPath + 'doc/api_assets/sh.css', 'utf8'),
-                    fs.readFileSync(testPathTmp + 'doc/api_assets/sh.css', 'utf8'));
-                test.equal(fs.readFileSync(contentPath + 'BSDmakefile', 'utf8'),
-                    fs.readFileSync(testPathTmp + 'BSDmakefile', 'utf8'));
+                assertFilesEqual(test, contentPath + 'doc/api_assets/sh.css', testPathTmp + 'doc/api_assets/sh.css');
+                assertFilesEqual(test, contentPath + 'BSDmakefile', testPathTmp + 'BSDmakefile');
                 resolve();
             });
         });
@@ -85,6 +80,12 @@ function testFileOk(file, test) {
             test.done();
         });
     });
+}
+
+function assertFilesEqual(test, actual, expected) {
+    var actualData = fs.readFileSync(actual).toString('utf8').replace(/\r\n/g, '\n'),
+        expectedData = fs.readFileSync(expected).toString('utf8').replace(/\r\n/g, '\n');
+    test.equal(actualData, expectedData, actual + ' <> ' + expected);
 }
 
 function rmdirSync(dir) {
@@ -211,6 +212,8 @@ module.exports.parallel['streaming 100 files'] = function(test) {
 
 module.exports.setUp = function(done) {
     testPathTmp = baseBathTmp + testNum++ + '/';
+    if (!fs.existsSync(baseBathTmp))
+        fs.mkdirSync(baseBathTmp);
     if (fs.existsSync(testPathTmp))
         rmdirSync(testPathTmp);
     fs.mkdirSync(testPathTmp);
