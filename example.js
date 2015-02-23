@@ -15,7 +15,7 @@ zip.on('ready', function() {
     //    stm.pipe(process.stdout);
     //});
     //zip.extract('README.md', 'd:/temp/ext/', function(err) {
-    //    console.log('Entry extracted');
+    //    console.log(err ? err : 'Entry extracted');
     //});
     zip.extract(null, 'd:/temp/ext', function(err, count) {
         console.log(err ? err : ('Extracted ' + count + ' entries'));

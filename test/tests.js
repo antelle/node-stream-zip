@@ -4,7 +4,9 @@ var
     StreamZip = require('../node-stream-zip.js');
 
 var
-    testPathTmp = 'test/.tmp/',
+    testPathTmp,
+    testNum = 0,
+    baseBathTmp = 'test/.tmp/',
     contentPath = 'test/content/';
 
 function testFileOk(file, test) {
@@ -95,12 +97,10 @@ function rmdirSync(dir) {
         } else if(stat.isDirectory()) {
             rmdirSync(filename);
         } else {
-            fs.unlinkSync(filename);
+            try { fs.unlinkSync(filename); } catch (e) {}
         }
     }
-    try {
-        fs.rmdirSync(dir);
-    } catch (err) {}
+    try { fs.rmdirSync(dir); } catch (e) {}
 }
 
 module.exports.ok = {};
@@ -170,14 +170,38 @@ module.exports.error['corrupt_entry.zip'] = function(test) {
         Promise.all([oneEntry, allEntries]).then(function() { test.done(); });
     });
 };
+module.exports.error['bad_crc.zip'] = function(test) {
+    test.expect(2);
+    var zip = new StreamZip({ file: 'test/err/bad_crc.zip' });
+    zip.on('ready', function() {
+        var oneEntry = new Promise(function(resolve) {
+            zip.extract('doc/api_assets/logo.svg', testPathTmp, function (err) {
+                test.equal(err, 'Invalid CRC');
+                resolve();
+            });
+        });
+        var allEntries = new Promise(function(resolve) {
+            zip.extract('', testPathTmp, function (err) {
+                test.ok(err);
+                resolve();
+            });
+        });
+        Promise.all([oneEntry, allEntries]).then(function() { test.done(); });
+    });
+};
 
 module.exports.setUp = function(done) {
+    testPathTmp = baseBathTmp + testNum++ + '/';
     if (fs.existsSync(testPathTmp))
         rmdirSync(testPathTmp);
     fs.mkdirSync(testPathTmp);
     done();
 };
 module.exports.tearDown = function(done) {
-    rmdirSync(testPathTmp);
+    //rmdirSync(testPathTmp);
     done();
 };
+
+process.on('exit', function() {
+    rmdirSync(baseBathTmp);
+});

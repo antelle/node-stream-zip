@@ -305,12 +305,15 @@ var StreamZip = function(config) {
                     return callback('Entry encrypted');
                 } else {
                     if (entry.method === consts.STORED) {
-                        callback(null, entryStream);
                     } else if (entry.method === consts.DEFLATED || entry.method === consts.ENHANCED_DEFLATED) {
-                        callback(null, entryStream.pipe(zlib.createInflateRaw()));
+                        entryStream = entryStream.pipe(zlib.createInflateRaw());
                     } else {
                         callback('Unknown compression method: ' + entry.method);
+                        return;
                     }
+                    if ((entry.flags & 0x8) != 0x8) // if bit 3 (0x08) of the general-purpose flags field is set, then the CRC-32 and file sizes are not known when the header is written
+                        entryStream = entryStream.pipe(new EntryVerifyStream(entryStream, entry.crc, entry.size));
+                    callback(null, entryStream);
                 }
             } catch (ex) {
                 callback(ex);
@@ -698,6 +701,59 @@ EntryDataReaderStream.prototype.readCallback = function(err, bytesRead, buffer) 
             buffer = buffer.slice(0, bytesRead);
         this.push(buffer);
     }
+};
+
+// endregion
+
+// region EntryVerifyStream
+
+var EntryVerifyStream = function(baseStm, crc, size) {
+    stream.Transform.prototype.constructor.call(this);
+    this.crc = crc;
+    this.size = size;
+    this.state = {
+        crc: ~0,
+        size: 0
+    };
+    var that = this;
+    baseStm.on('error', function(e) {
+        that.emit('error', e);
+    });
+};
+
+util.inherits(EntryVerifyStream, stream.Transform);
+
+EntryVerifyStream.prototype._transform = function(data, encoding, callback) {
+    var crcTable = EntryVerifyStream.prototype.crcTable;
+    if (!crcTable) {
+        EntryVerifyStream.prototype.crcTable = crcTable = [];
+        var b = new Buffer(4);
+        for (var n = 0; n < 256; n++) {
+            var c = n;
+            for (var k = 8; --k >= 0; )
+                if ((c & 1) != 0)  { c = 0xedb88320 ^ (c >>> 1); } else { c = c >>> 1; }
+            if (c < 0) {
+                b.writeInt32LE(c, 0);
+                c = b.readUInt32LE(0);
+            }
+            crcTable[n] = c;
+        }
+    }
+    var crc = this.state.crc, off = 0, len = data.length;
+    while (--len >= 0)
+        crc = crcTable[(crc ^ data[off++]) & 0xff] ^ (crc >>> 8);
+    this.state.crc = crc;
+    this.state.size += data.length;
+    if (this.state.size >= data.length) {
+        var buf = new Buffer(4);
+        buf.writeInt32LE(~this.state.crc & 0xffffffff, 0);
+        crc = buf.readUInt32LE(0);
+        if (crc !== this.crc)
+            return callback('Invalid CRC', data);
+        if (this.state.size !== this.size)
+            return callback('Invalid size', data);
+    }
+    callback(null, data);
 };
 
 // endregion
