@@ -744,7 +744,7 @@ EntryVerifyStream.prototype._transform = function(data, encoding, callback) {
         crc = crcTable[(crc ^ data[off++]) & 0xff] ^ (crc >>> 8);
     this.state.crc = crc;
     this.state.size += data.length;
-    if (this.state.size >= data.length) {
+    if (this.state.size >= this.size) {
         var buf = new Buffer(4);
         buf.writeInt32LE(~this.state.crc & 0xffffffff, 0);
         crc = buf.readUInt32LE(0);
