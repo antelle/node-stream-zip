@@ -21,7 +21,7 @@
     }
   ],
   "files": [
-    "node-stream-zip.js"
+    "node_stream_zip.js"
   ],
   "scripts": {
     "test": "nodeunit test/tests.js"
