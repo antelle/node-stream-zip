@@ -1,7 +1,7 @@
 var
     fs = require('fs'),
     path = require('path'),
-    StreamZip = require('../node-stream-zip.js');
+    StreamZip = require('../node_stream_zip.js');
 
 var
     testPathTmp,
@@ -18,7 +18,7 @@ function testFileOk(file, test) {
     } else if (file === 'windows.zip') {
         expEntriesCount = 8;
     }
-    test.expect(22);
+    test.expect(23);
     var zip = new StreamZip({ file: 'test/ok/' + file });
     zip.on('ready', function() {
         test.equal(zip.entriesCount, expEntriesCount);
@@ -75,6 +75,9 @@ function testFileOk(file, test) {
                 resolve();
             });
         });
+        var actualEentryData = zip.entryDataSync('README.md');
+        var expectedEntryData = fs.readFileSync(contentPath + 'README.md');
+        assertBuffersEqual(test, actualEentryData, expectedEntryData, 'sync entry');
 
         Promise.all([filePromise, fileToFolderPromise, folderPromise, extractAllPromise]).then(function() {
             test.done();
@@ -83,9 +86,13 @@ function testFileOk(file, test) {
 }
 
 function assertFilesEqual(test, actual, expected) {
-    var actualData = fs.readFileSync(actual).toString('utf8').replace(/\r\n/g, '\n'),
-        expectedData = fs.readFileSync(expected).toString('utf8').replace(/\r\n/g, '\n');
-    test.equal(actualData, expectedData, actual + ' <> ' + expected);
+    assertBuffersEqual(test, fs.readFileSync(actual), fs.readFileSync(expected), actual + ' <> ' + expected);
+}
+
+function assertBuffersEqual(test, actual, expected, str) {
+    var actualData = actual.toString('utf8').replace(/\r\n/g, '\n'),
+        expectedData = expected.toString('utf8').replace(/\r\n/g, '\n');
+    test.equal(actualData, expectedData, str);
 }
 
 function rmdirSync(dir) {
