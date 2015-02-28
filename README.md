@@ -42,6 +42,8 @@ zip.on('ready', function() {
     zip.extract(null, './temp/', function(err, count) {
         console.log('Extracted ' + count + ' entries');
     });
+    // read file as buffer in sync way
+    var data = zip.entryDataSync('README.md');
 });
 zip.on('extract', function(entry, file) {
     console.log('Extracted ' + entry.name + ' to ' + file);
