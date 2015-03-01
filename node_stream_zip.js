@@ -242,9 +242,9 @@ var StreamZip = function(config) {
                 if (!entry) {
                     entry = new ZipEntry();
                     entry.readHeader(buffer, bufferPos);
+                    entry.headerOffset = op.pos;
                     op.entry = entry;
                     op.pos += consts.CENHDR;
-                    entry.headerOffset = op.pos;
                     bufferPos += consts.CENHDR;
                 }
                 var entryHeaderSize = entry.fnameLen + entry.extraLen + entry.comLen;

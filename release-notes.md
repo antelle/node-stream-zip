@@ -1,6 +1,6 @@
 Release notes
 -------------
-##### v1.2.0 (2015-03-01)
+##### v1.2.1 (2015-03-01)
 Exporting header offsets info  
 `+` `headerOffset`, `centralDirectory`  
 
