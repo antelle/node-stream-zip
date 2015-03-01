@@ -192,12 +192,14 @@ var StreamZip = function(config) {
                     try {
                         centralDirectory = new CentralDirectoryHeader();
                         centralDirectory.read(buffer.slice(bufferPosition, bufferPosition + consts.ENDHDR));
+                        centralDirectory.headerOffset = pos;
                         if (centralDirectory.commentLength)
                             that.comment = buffer.slice(bufferPosition + consts.ENDHDR,
                                 bufferPosition + consts.ENDHDR + centralDirectory.commentLength).toString();
                         else
                             that.comment = null;
                         that.entriesCount = centralDirectory.volumeEntries;
+                        that.centralDirectory = centralDirectory;
                         readEntries();
                     } catch (err) {
                         that.emit('error', err);
@@ -242,6 +244,7 @@ var StreamZip = function(config) {
                     entry.readHeader(buffer, bufferPos);
                     op.entry = entry;
                     op.pos += consts.CENHDR;
+                    entry.headerOffset = op.pos;
                     bufferPos += consts.CENHDR;
                 }
                 var entryHeaderSize = entry.fnameLen + entry.extraLen + entry.comLen;
