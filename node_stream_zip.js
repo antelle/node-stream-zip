@@ -172,7 +172,7 @@ var StreamZip = function(config) {
             totalReadLength: totalReadLength,
             minPos: fileSize - totalReadLength,
             lastPos: fileSize,
-            chunkSize: 1024
+            chunkSize: Math.min(1024, chunkSize)
         };
         op.win.read(fileSize - op.chunkSize, op.chunkSize, readCentralDirectoryCallback);
     }
@@ -184,7 +184,7 @@ var StreamZip = function(config) {
             buffer = op.win.buffer,
             pos = op.lastPos,
             bufferPosition = pos - op.win.position,
-            minPos = Math.max(op.minPos, bufferPosition);
+            minPos = op.minPos;
         while (--pos >= minPos && --bufferPosition >= 0) {
             if (buffer[bufferPosition] === 0x50) { // quick check that the byte is 'P'
                 if (buffer.readUInt32LE(bufferPosition) === consts.ENDSIG) { // "PK\005\006"
@@ -209,7 +209,7 @@ var StreamZip = function(config) {
             }
         }
         if (pos === minPos) {
-            return that.emit('error', 'Bad archive format');
+            return that.emit('error', 'Bad archive');
         }
         op.lastPos = pos + 1;
         op.chunkSize *= 2;

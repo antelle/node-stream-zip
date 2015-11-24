@@ -117,6 +117,16 @@ filesOk.forEach(function(file) {
     module.exports.ok[file] = testFileOk.bind(null, file);
 });
 
+module.exports.ok['tiny.js'] = function(test) {
+    test.expect(1);
+    var zip = new StreamZip({ file: 'test/special/tiny.zip' });
+    zip.on('ready', function() {
+        var actualEentryData = zip.entryDataSync('BSDmakefile').toString('utf8');
+        test.equal(actualEentryData.substr(0, 4), 'all:');
+        test.done();
+    });
+};
+
 module.exports.error = {};
 module.exports.error['enc_aes.zip'] = function(test) {
     test.expect(1);

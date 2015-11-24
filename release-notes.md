@@ -1,5 +1,9 @@
 Release notes
 -------------
+##### v1.2.2 (2015-11-24)
+Tiny archives reading bugfix  
+`-` fix #3: reading archives smaller than 1kb  
+
 ##### v1.2.1 (2015-03-01)
 Exporting header offsets info  
 `+` `headerOffset`, `centralDirectory`  
