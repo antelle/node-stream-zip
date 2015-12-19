@@ -1,5 +1,8 @@
 Release notes
 -------------
+##### v1.3.1 (2015-12-19)
+ZIP64 unit test  
+
 ##### v1.3.0 (2015-12-19)
 ZIP64 format support  
 
