@@ -1,5 +1,8 @@
 Release notes
 -------------
+##### v1.3.0 (2015-12-19)
+ZIP64 format support  
+
 ##### v1.2.2 (2015-11-24)
 Tiny archives reading bugfix  
 `-` fix #3: reading archives smaller than 1kb  

@@ -60,12 +60,28 @@ var consts = {
     /* The entries in the end of central directory */
     ENDHDR           : 22, // END header size
     ENDSIG           : 0x06054b50, // "PK\005\006"
+    ENDSIGFIRST      : 0x50,
     ENDSUB           : 8, // number of entries on this disk
     ENDTOT           : 10, // total number of entries
     ENDSIZ           : 12, // central directory size in bytes
     ENDOFF           : 16, // offset of first CEN header
     ENDCOM           : 20, // zip file comment length
     MAXFILECOMMENT   : 0xFFFF,
+
+    /* The entries in the end of ZIP64 central directory locator */
+    ENDL64HDR       : 20, // ZIP64 end of central directory locator header size
+    ENDL64SIG       : 0x07064b50, // ZIP64 end of central directory locator signature
+    ENDL64SIGFIRST  : 0x50,
+    ENDL64OFS       : 8, // ZIP64 end of central directory offset
+
+    /* The entries in the end of ZIP64 central directory */
+    END64HDR        : 56, // ZIP64 end of central directory header size
+    END64SIG        : 0x06064b50, // ZIP64 end of central directory signature
+    END64SIGFIRST   : 0x50,
+    END64SUB        : 24, // number of entries on this disk
+    END64TOT        : 32, // total number of entries
+    END64SIZ        : 40,
+    END64OFF        : 48,
 
     /* Compression methods */
     STORED           : 0, // no compression
@@ -165,19 +181,7 @@ var StreamZip = function(config) {
         });
     }
 
-    function readCentralDirectory() {
-        var totalReadLength = Math.min(consts.ENDHDR + consts.MAXFILECOMMENT, fileSize);
-        op = {
-            win: new FileWindowBuffer(fd),
-            totalReadLength: totalReadLength,
-            minPos: fileSize - totalReadLength,
-            lastPos: fileSize,
-            chunkSize: Math.min(1024, chunkSize)
-        };
-        op.win.read(fileSize - op.chunkSize, op.chunkSize, readCentralDirectoryCallback);
-    }
-
-    function readCentralDirectoryCallback(err, bytesRead) {
+    function readUntilFoundCallback(err, bytesRead) {
         if (err || !bytesRead)
             return that.emit('error', err || 'Archive read error');
         var
@@ -186,24 +190,11 @@ var StreamZip = function(config) {
             bufferPosition = pos - op.win.position,
             minPos = op.minPos;
         while (--pos >= minPos && --bufferPosition >= 0) {
-            if (buffer[bufferPosition] === 0x50) { // quick check that the byte is 'P'
-                if (buffer.readUInt32LE(bufferPosition) === consts.ENDSIG) { // "PK\005\006"
-                    op = {};
-                    try {
-                        centralDirectory = new CentralDirectoryHeader();
-                        centralDirectory.read(buffer.slice(bufferPosition, bufferPosition + consts.ENDHDR));
-                        centralDirectory.headerOffset = pos;
-                        if (centralDirectory.commentLength)
-                            that.comment = buffer.slice(bufferPosition + consts.ENDHDR,
-                                bufferPosition + consts.ENDHDR + centralDirectory.commentLength).toString();
-                        else
-                            that.comment = null;
-                        that.entriesCount = centralDirectory.volumeEntries;
-                        that.centralDirectory = centralDirectory;
-                        readEntries();
-                    } catch (err) {
-                        that.emit('error', err);
-                    }
+            if (buffer[bufferPosition] === op.firstByte) { // quick check first signature byte
+                if (buffer.readUInt32LE(bufferPosition) === op.sig) {
+                    op.lastBufferPosition = bufferPosition;
+                    op.lastBytesRead = bytesRead;
+                    op.complete();
                     return;
                 }
             }
@@ -216,7 +207,100 @@ var StreamZip = function(config) {
         if (pos <= minPos)
             return that.emit('error', 'Bad archive');
         var expandLength = Math.min(op.chunkSize, pos - minPos);
-        op.win.expandLeft(expandLength, readCentralDirectoryCallback);
+        op.win.expandLeft(expandLength, readUntilFoundCallback);
+
+    }
+
+    function readCentralDirectory() {
+        var totalReadLength = Math.min(consts.ENDHDR + consts.MAXFILECOMMENT, fileSize);
+        op = {
+            win: new FileWindowBuffer(fd),
+            totalReadLength: totalReadLength,
+            minPos: fileSize - totalReadLength,
+            lastPos: fileSize,
+            chunkSize: Math.min(1024, chunkSize),
+            firstByte: consts.ENDSIGFIRST,
+            sig: consts.ENDSIG,
+            complete: readCentralDirectoryComplete
+        };
+        op.win.read(fileSize - op.chunkSize, op.chunkSize, readUntilFoundCallback);
+    }
+
+    function readCentralDirectoryComplete() {
+        var buffer = op.win.buffer;
+        var pos = op.lastBufferPosition;
+        try {
+            centralDirectory = new CentralDirectoryHeader();
+            centralDirectory.read(buffer.slice(pos, pos + consts.ENDHDR));
+            centralDirectory.headerOffset = pos;
+            if (centralDirectory.commentLength)
+                that.comment = buffer.slice(pos + consts.ENDHDR,
+                    pos + consts.ENDHDR + centralDirectory.commentLength).toString();
+            else
+                that.comment = null;
+            that.entriesCount = centralDirectory.volumeEntries;
+            that.centralDirectory = centralDirectory;
+            if (centralDirectory.volumeEntries === 0xffff && centralDirectory.totalEntries === 0xffff
+                || centralDirectory.size === 0xffffffff || centralDirectory.offset === 0xffffffff) {
+                readZip64CentralDirectoryLocator();
+            } else {
+                op = {};
+                readEntries();
+            }
+        } catch (err) {
+            that.emit('error', err);
+        }
+    }
+
+    function readZip64CentralDirectoryLocator() {
+        var length = consts.ENDL64HDR;
+        if (op.lastBufferPosition > length) {
+            op.lastBufferPosition -= length;
+            readZip64CentralDirectoryLocatorComplete();
+        } else {
+            op = {
+                win: op.win,
+                totalReadLength: length,
+                minPos: op.win.position - length,
+                lastPos: op.win.position,
+                chunkSize: op.chunkSize,
+                firstByte: consts.ENDL64SIGFIRST,
+                sig: consts.ENDL64SIG,
+                complete: readZip64CentralDirectoryLocatorComplete
+            };
+            op.win.read(op.lastPos - op.chunkSize, op.chunkSize, readUntilFoundCallback);
+        }
+    }
+
+    function readZip64CentralDirectoryLocatorComplete() {
+        var buffer = op.win.buffer;
+        var locHeader = new CentralDirectoryLoc64Header();
+        locHeader.read(buffer.slice(op.lastBufferPosition, op.lastBufferPosition + consts.ENDL64HDR));
+        var readLength = fileSize - locHeader.headerOffset;
+        op = {
+            win: op.win,
+            totalReadLength: readLength,
+            minPos: locHeader.headerOffset,
+            lastPos: op.lastPos,
+            chunkSize: op.chunkSize,
+            firstByte: consts.END64SIGFIRST,
+            sig: consts.END64SIG,
+            complete: readZip64CentralDirectoryComplete
+        };
+        op.win.read(fileSize - op.chunkSize, op.chunkSize, readUntilFoundCallback);
+    }
+
+    function readZip64CentralDirectoryComplete() {
+        var buffer = op.win.buffer;
+        var zip64cd = new CentralDirectoryZip64Header();
+        zip64cd.read(buffer.slice(op.lastBufferPosition, op.lastBufferPosition + consts.END64HDR));
+        that.centralDirectory.volumeEntries = zip64cd.volumeEntries;
+        that.centralDirectory.totalEntries = zip64cd.totalEntries;
+        that.centralDirectory.size = zip64cd.size;
+        that.centralDirectory.offset = zip64cd.offset;
+        that.entriesCount = zip64cd.volumeEntries;
+        op = {};
+        readEntries();
     }
 
     function readEntries() {
@@ -502,7 +586,7 @@ var CentralDirectoryHeader = function() {
 
 CentralDirectoryHeader.prototype.read = function(data) {
     if (data.length != consts.ENDHDR || data.readUInt32LE(0) != consts.ENDSIG)
-        throw 'Invalid central directoty';
+        throw 'Invalid central directory';
     // number of entries on this volume
     this.volumeEntries = data.readUInt16LE(consts.ENDSUB);
     // total number of entries
@@ -513,6 +597,40 @@ CentralDirectoryHeader.prototype.read = function(data) {
     this.offset = data.readUInt32LE(consts.ENDOFF);
     // zip file comment length
     this.commentLength = data.readUInt16LE(consts.ENDCOM);
+};
+
+// endregion
+
+// region CentralDirectoryLoc64Header
+
+var CentralDirectoryLoc64Header = function() {
+};
+
+CentralDirectoryLoc64Header.prototype.read = function(data) {
+    if (data.length != consts.ENDL64HDR || data.readUInt32LE(0) != consts.ENDL64SIG)
+        throw 'Invalid zip64 central directory locator';
+    // ZIP64 EOCD header offset
+    this.headerOffset = Util.readUInt64LE(data, consts.ENDSUB);
+};
+
+// endregion
+
+// region CentralDirectoryZip64Header
+
+var CentralDirectoryZip64Header = function() {
+};
+
+CentralDirectoryZip64Header.prototype.read = function(data) {
+    if (data.length != consts.END64HDR || data.readUInt32LE(0) != consts.END64SIG)
+        throw 'Invalid central directory';
+    // number of entries on this volume
+    this.volumeEntries = Util.readUInt64LE(data, consts.END64SUB);
+    // total number of entries
+    this.totalEntries = Util.readUInt64LE(data, consts.END64TOT);
+    // central directory size in bytes
+    this.size = Util.readUInt64LE(data, consts.END64SIZ);
+    // offset of first CEN header
+    this.offset = Util.readUInt64LE(data, consts.END64OFF);
 };
 
 // endregion
@@ -612,17 +730,13 @@ ZipEntry.prototype.readExtra = function(data, offset) {
 
 ZipEntry.prototype.parseZip64Extra = function(data, offset, length) {
     if (length >= consts.EF_ZIP64_SCOMP && this.size === consts.EF_ZIP64_OR_32)
-        this.size = this.readUInt64LE(data, offset + consts.EF_ZIP64_SUNCOMP);
+        this.size = Util.readUInt64LE(data, offset + consts.EF_ZIP64_SUNCOMP);
     if (length >= consts.EF_ZIP64_RHO && this.compressedSize === consts.EF_ZIP64_OR_32)
-        this.compressedSize = this.readUInt64LE(data, offset + consts.EF_ZIP64_SCOMP);
+        this.compressedSize = Util.readUInt64LE(data, offset + consts.EF_ZIP64_SCOMP);
     if (length >= consts.EF_ZIP64_DSN && this.offset === consts.EF_ZIP64_OR_32)
-        this.offset = this.readUInt64LE(data, offset + consts.EF_ZIP64_RHO);
+        this.offset = Util.readUInt64LE(data, offset + consts.EF_ZIP64_RHO);
     if (length >= consts.EF_ZIP64_DSN + 4 && this.diskStart === consts.EF_ZIP64_OR_16)
         this.diskStart = data.readUInt32LE(consts.EF_ZIP64_DSN);
-};
-
-ZipEntry.prototype.readUInt64LE = function(buffer, offset) {
-    return (buffer.readUInt32LE(offset + 4) << 4) + buffer.readUInt32LE(offset);
 };
 
 Object.defineProperty(ZipEntry.prototype, 'encrypted', {
@@ -838,6 +952,16 @@ CrcVerify.getCrcTable = function() {
         }
     }
     return crcTable;
+};
+
+// endregion
+
+// region Util
+
+var Util = {
+    readUInt64LE: function(buffer, offset) {
+        return (buffer.readUInt32LE(offset + 4) << 4) + buffer.readUInt32LE(offset);
+    }
 };
 
 // endregion
