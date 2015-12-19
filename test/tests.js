@@ -117,13 +117,28 @@ filesOk.forEach(function(file) {
     module.exports.ok[file] = testFileOk.bind(null, file);
 });
 
-module.exports.ok['tiny.js'] = function(test) {
+module.exports.ok['tiny.zip'] = function(test) {
     test.expect(1);
     var zip = new StreamZip({ file: 'test/special/tiny.zip' });
     zip.on('ready', function() {
         var actualEentryData = zip.entryDataSync('BSDmakefile').toString('utf8');
         test.equal(actualEentryData.substr(0, 4), 'all:');
         test.done();
+    });
+};
+
+module.exports.ok['zip64.zip'] = function(test) {
+    test.expect(1);
+    var zip = new StreamZip({ file: 'test/special/zip64.zip' });
+    zip.on('ready', function() {
+        var internalZip = zip.entryDataSync('files.zip');
+        var filesZipTmp = basePathTmp + 'files.zip';
+        fs.writeFileSync(filesZipTmp, internalZip);
+        var filesZip = new StreamZip({ file: filesZipTmp, storeEntries: true });
+        filesZip.on('ready', function() {
+            test.equal(66667, filesZip.entriesCount);
+            test.done();
+        });
     });
 };
 
