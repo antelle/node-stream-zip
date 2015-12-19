@@ -10,6 +10,7 @@ Features:
 - no dependencies, no binary addons  
 - decompression with built-in zlib module
 - deflate, deflate64, sfx, macosx/windows built-in archives  
+- ZIP64 support  
 
 # Installation
 
