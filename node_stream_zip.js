@@ -240,8 +240,8 @@ var StreamZip = function(config) {
                 that.comment = null;
             that.entriesCount = centralDirectory.volumeEntries;
             that.centralDirectory = centralDirectory;
-            if (centralDirectory.volumeEntries === 0xffff && centralDirectory.totalEntries === 0xffff
-                || centralDirectory.size === 0xffffffff || centralDirectory.offset === 0xffffffff) {
+            if (centralDirectory.volumeEntries === consts.EF_ZIP64_OR_16 && centralDirectory.totalEntries === consts.EF_ZIP64_OR_16
+                || centralDirectory.size === consts.EF_ZIP64_OR_32 || centralDirectory.offset === consts.EF_ZIP64_OR_32) {
                 readZip64CentralDirectoryLocator();
             } else {
                 op = {};
