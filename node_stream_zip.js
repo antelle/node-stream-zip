@@ -139,11 +139,7 @@ var consts = {
     ID_POSZIP        : 0x4690,
 
     EF_ZIP64_OR_32   : 0xffffffff,
-    EF_ZIP64_OR_16   : 0xffff,
-    EF_ZIP64_SUNCOMP : 0,
-    EF_ZIP64_SCOMP   : 8,
-    EF_ZIP64_RHO     : 16,
-    EF_ZIP64_DSN     : 24
+    EF_ZIP64_OR_16   : 0xffff
 };
 
 // endregion
@@ -729,14 +725,22 @@ ZipEntry.prototype.readExtra = function(data, offset) {
 };
 
 ZipEntry.prototype.parseZip64Extra = function(data, offset, length) {
-    if (length >= consts.EF_ZIP64_SCOMP && this.size === consts.EF_ZIP64_OR_32)
-        this.size = Util.readUInt64LE(data, offset + consts.EF_ZIP64_SUNCOMP);
-    if (length >= consts.EF_ZIP64_RHO && this.compressedSize === consts.EF_ZIP64_OR_32)
-        this.compressedSize = Util.readUInt64LE(data, offset + consts.EF_ZIP64_SCOMP);
-    if (length >= consts.EF_ZIP64_DSN && this.offset === consts.EF_ZIP64_OR_32)
-        this.offset = Util.readUInt64LE(data, offset + consts.EF_ZIP64_RHO);
-    if (length >= consts.EF_ZIP64_DSN + 4 && this.diskStart === consts.EF_ZIP64_OR_16)
-        this.diskStart = data.readUInt32LE(consts.EF_ZIP64_DSN);
+    if (length >= 8 && this.size === consts.EF_ZIP64_OR_32) {
+        this.size = Util.readUInt64LE(data, offset);
+        offset += 8; length -= 8;
+    }
+    if (length >= 8 && this.compressedSize === consts.EF_ZIP64_OR_32) {
+        this.compressedSize = Util.readUInt64LE(data, offset);
+        offset += 8; length -= 8;
+    }
+    if (length >= 8 && this.offset === consts.EF_ZIP64_OR_32) {
+        this.offset = Util.readUInt64LE(data, offset);
+        offset += 8; length -= 8;
+    }
+    if (length >= 4 && this.diskStart === consts.EF_ZIP64_OR_16) {
+        this.diskStart = data.readUInt32LE(offset);
+        // offset += 4; length -= 4;
+    }
 };
 
 Object.defineProperty(ZipEntry.prototype, 'encrypted', {
@@ -960,7 +964,7 @@ CrcVerify.getCrcTable = function() {
 
 var Util = {
     readUInt64LE: function(buffer, offset) {
-        return (buffer.readUInt32LE(offset + 4) << 4) + buffer.readUInt32LE(offset);
+        return (buffer.readUInt32LE(offset + 4) * 0x0000000100000000) + buffer.readUInt32LE(offset);
     }
 };
 

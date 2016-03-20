@@ -1,5 +1,9 @@
 Release notes
 -------------
+##### v1.3.2 (2016-03-20)
+Support 4GB+ ZIP64 archives  
+`-` fix #5: correct parsing of ZIP64 headers  
+
 ##### v1.3.1 (2015-12-19)
 ZIP64 unit test  
 
