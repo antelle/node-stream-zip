@@ -56,6 +56,13 @@ zip.on('entry', function(entry) {
 });
 ```
 
+If you pass `storeEntries: true` to constructor, you will be able to access entries inside zip archive with:
+
+- `zip.entries()` - get all entries description
+- `zip.entry(name)` - get entry description by name
+- `zip.stream(entry, function(err, stm) { })` - get entry data reader stream
+- `zip.entryDataSync(entry)` - get entry data in sync way
+
 # Building
 
 The project doesn't require building. To run unit tests with [nodeunit](https://github.com/caolan/nodeunit):  
