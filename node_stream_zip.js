@@ -449,7 +449,7 @@ var StreamZip = function(config) {
 
     function canVerifyCrc(entry) {
         // if bit 3 (0x08) of the general-purpose flags field is set, then the CRC-32 and file sizes are not known when the header is written
-        return (entry.flags & 0x8) != 0x8
+        return (entry.flags & 0x8) != 0x8;
     }
 
     function extract(entry, outPath, callback) {
