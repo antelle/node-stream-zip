@@ -1,4 +1,4 @@
-# node-stream-zip
+# node-stream-zip [![Build status](https://travis-ci.org/antelle/node-stream-zip.svg?branch=master)](https://travis-ci.org/antelle/node-stream-zip)
 
 node.js library for reading and extraction of ZIP archives.  
 Features:
@@ -15,7 +15,7 @@ Features:
 # Installation
 
 `$ npm install node-stream-zip`
-	
+
 # Usage
 
 ```javascript
@@ -51,7 +51,7 @@ zip.on('extract', function(entry, file) {
 });
 zip.on('entry', function(entry) {
     // called on load, when entry description has been read
-    // you can already stream this entry, without waiting until all entry descriptions are read (suitable for very large archives) 
+    // you can already stream this entry, without waiting until all entry descriptions are read (suitable for very large archives)
     console.log('Read entry ', entry.name);
 });
 ```
@@ -75,4 +75,4 @@ The project doesn't require building. To run unit tests with [nodeunit](https://
 
 # Contributors
 
-ZIP parsing code has been partially forked from [cthackers/adm-zip](https://github.com/cthackers/adm-zip) (MIT license). 
+ZIP parsing code has been partially forked from [cthackers/adm-zip](https://github.com/cthackers/adm-zip) (MIT license).
