@@ -1,5 +1,8 @@
 Release notes
 -------------
+##### v1.3.3 (2016-04-05)
+Fixed headerOffset bug  
+
 ##### v1.3.2 (2016-03-20)
 Support 4GB+ ZIP64 archives  
 `-` fix #5: correct parsing of ZIP64 headers  

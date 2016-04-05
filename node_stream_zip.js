@@ -228,7 +228,7 @@ var StreamZip = function(config) {
         try {
             centralDirectory = new CentralDirectoryHeader();
             centralDirectory.read(buffer.slice(pos, pos + consts.ENDHDR));
-            centralDirectory.headerOffset = pos;
+            centralDirectory.headerOffset = op.win.position + pos;
             if (centralDirectory.commentLength)
                 that.comment = buffer.slice(pos + consts.ENDHDR,
                     pos + consts.ENDHDR + centralDirectory.commentLength).toString();
@@ -322,7 +322,7 @@ var StreamZip = function(config) {
                 if (!entry) {
                     entry = new ZipEntry();
                     entry.readHeader(buffer, bufferPos);
-                    entry.headerOffset = op.pos;
+                    entry.headerOffset = op.win.position + bufferPos;
                     op.entry = entry;
                     op.pos += consts.CENHDR;
                     bufferPos += consts.CENHDR;
