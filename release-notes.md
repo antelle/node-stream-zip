@@ -1,5 +1,8 @@
 Release notes
 -------------
+##### v1.3.4 (2016-07-23)
+Fix #10: extraction of files larger than 4GB  
+
 ##### v1.3.3 (2016-04-05)
 Fixed headerOffset bug  
 

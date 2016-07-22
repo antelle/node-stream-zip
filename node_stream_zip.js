@@ -689,9 +689,15 @@ ZipEntry.prototype.readDataHeader = function(data) {
     // uncompressed file crc-32 value
     this.crc = data.readUInt32LE(consts.LOCCRC) || this.crc;
     // compressed size
-    this.compressedSize = data.readUInt32LE(consts.LOCSIZ) || this.compressedSize;
+    var compressedSize = data.readUInt32LE(consts.LOCSIZ);
+    if (compressedSize && compressedSize !== consts.EF_ZIP64_OR_32) {
+        this.compressedSize = compressedSize;
+    }
     // uncompressed size
-    this.size = data.readUInt32LE(consts.LOCLEN) || this.size;
+    var size = data.readUInt32LE(consts.LOCLEN);
+    if (size && size !== consts.EF_ZIP64_OR_32) {
+        this.size = size;
+    }
     // filename length
     this.fnameLen = data.readUInt16LE(consts.LOCNAM);
     // extra field length
