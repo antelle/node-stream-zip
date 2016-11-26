@@ -242,6 +242,36 @@ module.exports.parallel['streaming 100 files'] = function(test) {
     });
 };
 
+module.exports['callback exception'] = function(test) {
+    test.expect(3);
+    var zip = new StreamZip({ file: 'test/special/tiny.zip' });
+    var streamError = false;
+    var streamFinished = false;
+    var callbackCallCount = 0;
+    zip.once('entry', function(entry) {
+        zip.stream(entry, function (err, stream) {
+            callbackCallCount++;
+            process.once('uncaughtException', function(ex) {
+                test.equal(ex.message, 'descriptive message!');
+                test.equal(callbackCallCount, 1);
+                test.ok(!streamError && !streamFinished);
+                test.done();
+            });
+            stream.on('data', function () {
+                throw new Error('descriptive message!');
+            });
+            stream.on('error', function () {
+                streamError = true;
+            });
+            stream.on('finish', function () {
+                streamFinished = true;
+            });
+            var downstream = new require('stream').PassThrough();
+            stream.pipe(downstream);
+        });
+    });
+};
+
 module.exports.setUp = function(done) {
     testPathTmp = basePathTmp + testNum++ + '/';
     if (!fs.existsSync(basePathTmp))
