@@ -1,5 +1,8 @@
 Release notes
 -------------
+##### v1.3.5 (2016-11-26)
+Fix #12: descriptive error messages  
+
 ##### v1.3.4 (2016-07-23)
 Fix #10: extraction of files larger than 4GB  
 
