@@ -431,15 +431,16 @@ var StreamZip = function(config) {
         new FsRead(fd, buffer, 0, buffer.length, entry.offset, function(err) {
             if (err)
                 return callback(err);
+            var readEx;
             try {
                 entry.readDataHeader(buffer);
                 if (entry.encrypted) {
-                    return callback('Entry encrypted');
+                    readEx = 'Entry encrypted';
                 }
-                callback(null, entry);
             } catch (ex) {
-                callback(ex);
+                readEx = ex
             }
+            callback(readEx, entry);
         }).read(sync);
     }
 
@@ -775,14 +776,15 @@ var FsRead = function(fd, buffer, offset, length, position, callback) {
 FsRead.prototype.read = function(sync) {
     //console.log('read', this.position, this.bytesRead, this.length, this.offset);
     this.waiting = true;
+    var err;
     if (sync) {
         try {
             var bytesRead = fs.readSync(this.fd, this.buffer, this.offset + this.bytesRead,
                 this.length - this.bytesRead, this.position + this.bytesRead);
-            this.readCallback(sync, null, bytesRead);
-        } catch (err) {
-            this.readCallback(sync, err, null);
+        } catch (e) {
+            err = e;
         }
+        this.readCallback(sync, err, err ? bytesRead : null);
     } else {
         fs.read(this.fd, this.buffer, this.offset + this.bytesRead,
             this.length - this.bytesRead, this.position + this.bytesRead,
@@ -906,12 +908,13 @@ var EntryVerifyStream = function(baseStm, crc, size) {
 util.inherits(EntryVerifyStream, stream.Transform);
 
 EntryVerifyStream.prototype._transform = function(data, encoding, callback) {
+    var err;
     try {
         this.verify.data(data);
-        callback(null, data);
-    } catch (err) {
-        callback(err, data);
+    } catch (e) {
+        err = e;
     }
+    callback(err, data);
 };
 
 // endregion
