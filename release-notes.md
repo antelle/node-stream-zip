@@ -1,5 +1,8 @@
 Release notes
 -------------
+##### v1.3.6 (2017-01-03)
+Fix #14: error unpacking archives with a special comment  
+
 ##### v1.3.5 (2016-11-26)
 Fix #12: descriptive error messages  
 

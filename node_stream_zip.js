@@ -186,7 +186,8 @@ var StreamZip = function(config) {
             bufferPosition = pos - op.win.position,
             minPos = op.minPos;
         while (--pos >= minPos && --bufferPosition >= 0) {
-            if (buffer[bufferPosition] === op.firstByte) { // quick check first signature byte
+            if (buffer.byteLength - bufferPosition >= 4 &&
+                buffer[bufferPosition] === op.firstByte) { // quick check first signature byte
                 if (buffer.readUInt32LE(bufferPosition) === op.sig) {
                     op.lastBufferPosition = bufferPosition;
                     op.lastBytesRead = bytesRead;
