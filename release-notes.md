@@ -1,5 +1,8 @@
 Release notes
 -------------
+##### v1.3.7 (2017-01-16)
+Fixed compatibility with node.js v0.10
+
 ##### v1.3.6 (2017-01-03)
 Fix #14: error unpacking archives with a special comment  
 
