@@ -775,7 +775,9 @@ var FsRead = function(fd, buffer, offset, length, position, callback) {
 };
 
 FsRead.prototype.read = function(sync) {
-    //console.log('read', this.position, this.bytesRead, this.length, this.offset);
+    if (StreamZip.debug) {
+        console.log('read', this.position, this.bytesRead, this.length, this.offset);
+    }
     this.waiting = true;
     var err;
     if (sync) {
