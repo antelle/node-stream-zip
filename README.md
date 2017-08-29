@@ -34,14 +34,17 @@ zip.on('ready', function() {
     // extract file
     zip.extract('node/benchmark/net/tcp-raw-c2s.js', './temp/', function(err) {
         console.log('Entry extracted');
+        zip.close();
     });
     // extract folder
     zip.extract('node/benchmark/', './temp/', function(err, count) {
         console.log('Extracted ' + count + ' entries');
+        zip.close();
     });
     // extract all
     zip.extract(null, './temp/', function(err, count) {
         console.log('Extracted ' + count + ' entries');
+        zip.close();
     });
     // read file as buffer in sync way
     var data = zip.entryDataSync('README.md');
