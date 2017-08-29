@@ -17,9 +17,11 @@ zip.on('ready', function() {
     });
     //zip.extract('README.md', 'd:/temp/ext/', function(err) {
     //    console.log(err ? err : 'Entry extracted');
+    //    zip.close();
     //});
     //zip.extract(null, 'd:/temp/ext', function(err, count) {
     //    console.log(err ? err : ('Extracted ' + count + ' entries'));
+    //    zip.close();
     //});
 });
 zip.on('extract', function(entry, file) {
