@@ -352,7 +352,7 @@ var StreamZip = function(config) {
 
     function checkEntriesExist() {
         if (!entries)
-            throw 'storeEntries disabled';
+            throw new Error('storeEntries disabled');
     }
 
     Object.defineProperty(this, 'ready', { get: function() { return ready; } });
@@ -406,10 +406,10 @@ var StreamZip = function(config) {
         } else if (entry.method === consts.DEFLATED || entry.method === consts.ENHANCED_DEFLATED) {
             data = zlib.inflateRawSync(data);
         } else {
-            throw 'Unknown compression method: ' + entry.method;
+            throw new Error('Unknown compression method: ' + entry.method);
         }
         if (data.length !== entry.size)
-            throw 'Invalid size';
+            throw new Error('Invalid size');
         if (canVerifyCrc(entry)) {
             var verify = new CrcVerify(entry.crc, entry.size);
             verify.data(data);
@@ -584,7 +584,7 @@ var CentralDirectoryHeader = function() {
 
 CentralDirectoryHeader.prototype.read = function(data) {
     if (data.length != consts.ENDHDR || data.readUInt32LE(0) != consts.ENDSIG)
-        throw 'Invalid central directory';
+        throw new Error('Invalid central directory');
     // number of entries on this volume
     this.volumeEntries = data.readUInt16LE(consts.ENDSUB);
     // total number of entries
@@ -606,7 +606,7 @@ var CentralDirectoryLoc64Header = function() {
 
 CentralDirectoryLoc64Header.prototype.read = function(data) {
     if (data.length != consts.ENDL64HDR || data.readUInt32LE(0) != consts.ENDL64SIG)
-        throw 'Invalid zip64 central directory locator';
+        throw new Error('Invalid zip64 central directory locator');
     // ZIP64 EOCD header offset
     this.headerOffset = Util.readUInt64LE(data, consts.ENDSUB);
 };
@@ -620,7 +620,7 @@ var CentralDirectoryZip64Header = function() {
 
 CentralDirectoryZip64Header.prototype.read = function(data) {
     if (data.length != consts.END64HDR || data.readUInt32LE(0) != consts.END64SIG)
-        throw 'Invalid central directory';
+        throw new Error('Invalid central directory');
     // number of entries on this volume
     this.volumeEntries = Util.readUInt64LE(data, consts.END64SUB);
     // total number of entries
@@ -641,7 +641,7 @@ var ZipEntry = function() {
 ZipEntry.prototype.readHeader = function(data, offset) {
     // data should be 46 bytes and start with "PK 01 02"
     if (data.length < offset + consts.CENHDR || data.readUInt32LE(offset) != consts.CENSIG) {
-        throw 'Invalid entry header';
+        throw new Error('Invalid entry header');
     }
     // version made by
     this.verMade = data.readUInt16LE(offset + consts.CENVEM);
@@ -678,7 +678,7 @@ ZipEntry.prototype.readHeader = function(data, offset) {
 ZipEntry.prototype.readDataHeader = function(data) {
     // 30 bytes and should start with "PK\003\004"
     if (data.readUInt32LE(0) != consts.LOCSIG) {
-        throw 'Invalid local header';
+        throw new Error('Invalid local header');
     }
     // version needed to extract
     this.version = data.readUInt16LE(consts.LOCVER);
@@ -818,7 +818,7 @@ var FileWindowBuffer = function(fd) {
 
     this.checkOp = function() {
         if (fsOp && fsOp.waiting)
-            throw 'Operation in progress';
+            throw new Error('Operation in progress');
     };
 
     this.read = function(pos, length, callback) {
@@ -945,9 +945,9 @@ CrcVerify.prototype.data = function(data) {
         buf.writeInt32LE(~this.state.crc & 0xffffffff, 0);
         crc = buf.readUInt32LE(0);
         if (crc !== this.crc)
-            throw 'Invalid CRC';
+            throw new Error('Invalid CRC');
         if (this.state.size !== this.size)
-            throw 'Invalid size';
+            throw new Error('Invalid size');
     }
 };
 
