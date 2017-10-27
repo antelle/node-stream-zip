@@ -209,7 +209,7 @@ module.exports.error['bad_crc.zip'] = function(test) {
     zip.on('ready', function() {
         var oneEntry = new Promise(function(resolve) {
             zip.extract('doc/api_assets/logo.svg', testPathTmp, function (err) {
-                test.equal(err, 'Invalid CRC');
+                test.equal(err.message, 'Invalid CRC');
                 resolve();
             });
         });
