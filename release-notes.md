@@ -1,5 +1,8 @@
 Release notes
 -------------
+##### v1.3.8 (2017-10-27)
+Fix #20: throw errors
+
 ##### v1.3.7 (2017-01-16)
 Fixed compatibility with node.js v0.10
 
