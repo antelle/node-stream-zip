@@ -3,14 +3,14 @@
 node.js library for reading and extraction of ZIP archives.  
 Features:
 
-- it never loads entire archive into memory, everything is read by chunks  
-- large archives support  
-- all operations are non-blocking, no sync i/o  
-- fast initialization  
-- no dependencies, no binary addons  
+- it never loads entire archive into memory, everything is read by chunks
+- large archives support
+- all operations are non-blocking, no sync i/o
+- fast initialization
+- no dependencies, no binary addons
 - decompression with built-in zlib module
-- deflate, deflate64, sfx, macosx/windows built-in archives  
-- ZIP64 support  
+- deflate, deflate64, sfx, macosx/windows built-in archives
+- ZIP64 support
 
 # Installation
 
@@ -19,10 +19,10 @@ Features:
 # Usage
 
 ```javascript
-var StreamZip = require('node-stream-zip');  
-var zip = new StreamZip({  
-    file: 'archive.zip',  
-    storeEntries: true    
+var StreamZip = require('node-stream-zip');
+var zip = new StreamZip({
+    file: 'archive.zip',
+    storeEntries: true
 });
 zip.on('error', function(err) { /*handle*/ });
 zip.on('ready', function() {
@@ -34,17 +34,15 @@ zip.on('ready', function() {
     // extract file
     zip.extract('node/benchmark/net/tcp-raw-c2s.js', './temp/', function(err) {
         console.log('Entry extracted');
-        zip.close();
     });
     // extract folder
     zip.extract('node/benchmark/', './temp/', function(err, count) {
         console.log('Extracted ' + count + ' entries');
-        zip.close();
     });
     // extract all
     zip.extract(null, './temp/', function(err, count) {
         console.log('Extracted ' + count + ' entries');
-        zip.close();
+        zip.close(); // don't forget to call it when you're done
     });
     // read file as buffer in sync way
     var data = zip.entryDataSync('README.md');
@@ -65,6 +63,7 @@ If you pass `storeEntries: true` to constructor, you will be able to access entr
 - `zip.entry(name)` - get entry description by name
 - `zip.stream(entry, function(err, stm) { })` - get entry data reader stream
 - `zip.entryDataSync(entry)` - get entry data in sync way
+- `zip.close()` - cleanup after all entries have been read, streamed, extracted, and you don't need the archive
 
 # Building
 
@@ -74,7 +73,7 @@ The project doesn't require building. To run unit tests with [nodeunit](https://
 # Known issues
 
 - [utf8](https://github.com/rubyzip/rubyzip/wiki/Files-with-non-ascii-filenames) file names
-- AES encrypted files  
+- AES encrypted files
 
 # Contributors
 
