@@ -1,4 +1,4 @@
-workspace.xml
+.idea/
 .DS_Store
 node_modules/
 build/
