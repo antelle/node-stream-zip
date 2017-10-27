@@ -86,6 +86,7 @@ zip.on('ready', function() {
         // do something with data
         nextEntry();
 
+
         //
         // Example: Handle only directories
         //
@@ -94,7 +95,7 @@ zip.on('ready', function() {
             return;
         }
 
-        // Extract: extract the entire directory tree
+        // Example: extract an entire directory tree
         // (Note: not good for iterating since directories
         // may contain subdirectories and you would double-extract
         zip.extract(entry.name, safeResolve('./temp/', entry.name), function (err, count) {
@@ -110,6 +111,7 @@ zip.on('ready', function() {
     // Example: Extract all entries at once
     zip.extract(null, './temp/', function(err, count) {
         console.log('Extracted ' + count + ' entries');
+        zip.close();
     });
 });
 zip.on('extract', function(entry, file) {
