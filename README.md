@@ -18,42 +18,103 @@ Features:
 
 # Usage
 
+Open a zip file
 ```javascript
-var StreamZip = require('node-stream-zip');
-var zip = new StreamZip({
+// Open a zip file
+const StreamZip = require('node-stream-zip');
+const zip = new StreamZip({
     file: 'archive.zip',
     storeEntries: true
 });
-zip.on('error', function(err) { /*handle*/ });
-zip.on('ready', function() {
+
+// Handle errors
+zip.on('error', err => { /*handle*/ });
+```
+
+List entries
+```javascript
+zip.on('ready', () => {
     console.log('Entries read: ' + zip.entriesCount);
+    for (const entry of Object.values(entries)) {
+        const desc = entry.isDirectory ? 'directory' : `${entry.size} bytes`;
+        console.log(`Entry ${entry.name}: ${desc}`);
+    }
+    // Do not forget to close the file once you're done
+    zip.close()
+});
+```
+
+Stream one entry to stdout
+```javascript
+zip.on('ready', () => {
     // stream to stdout
-    zip.stream('node/benchmark/net/tcp-raw-c2s.js', function(err, stm) {
+    zip.stream('path/inside/zip.txt', (err, stm) => {
         stm.pipe(process.stdout);
+        stm.on('end', () => {
+            zip.close();
+        });
     });
-    // extract file
-    zip.extract('node/benchmark/net/tcp-raw-c2s.js', './temp/', function(err) {
-        console.log('Entry extracted');
-    });
-    // extract folder
-    zip.extract('node/benchmark/', './temp/', function(err, count) {
-        console.log('Extracted ' + count + ' entries');
-    });
-    // extract all
-    zip.extract(null, './temp/', function(err, count) {
-        console.log('Extracted ' + count + ' entries');
-        zip.close(); // don't forget to call it when you're done
-    });
-    // read file as buffer in sync way
-    var data = zip.entryDataSync('README.md');
 });
-zip.on('extract', function(entry, file) {
-    console.log('Extracted ' + entry.name + ' to ' + file);
+```
+
+Extract one file to disk
+```javascript
+zip.on('ready', () => {
+    zip.extract('path/inside/zip.txt', './extracted.txt', err => {
+        console.log(err ? 'Extract error' : 'Extracted');
+        zip.close();
+    });
 });
-zip.on('entry', function(entry) {
+```
+
+Extract a folder from archive to disk
+```javascript
+zip.on('ready', () => {
+    fs.mkdirSync('extracted');
+    zip.extract('path/inside/zip/', './extracted', err => {
+        console.log(err ? 'Extract error' : 'Extracted');
+        zip.close();
+    });
+});
+```
+
+Extract everything
+```javascript
+zip.on('ready', () => {
+    fs.mkdirSync('extracted');
+    zip.extract(null, './extracted', (err, count) => {
+        if (err) {
+            console.log('Extract error', err);
+        } else {
+            console.log(`Extracted ${count} entries`);
+        }
+        zip.close();
+    });
+});
+```
+
+Read file as buffer in sync way
+```javascript
+zip.on('ready', () => {
+    // read file as buffer (this method is sync)
+    const data = zip.entryDataSync('path/inside/zip.txt');
+    zip.close();
+});
+```
+
+When extracting a folder, you can listen to `extract` event
+```javascript
+zip.on('extract', (entry, file) => {
+    console.log(`Extracted ${entry.name} to ${file}`);
+});
+```
+
+`entry` event is generated for every entry during loading
+```javascript
+zip.on('entry', entry => {
     // called on load, when entry description has been read
     // you can already stream this entry, without waiting until all entry descriptions are read (suitable for very large archives)
-    console.log('Read entry ', entry.name);
+    console.log(`Read entry ${entry.name}`);
 });
 ```
 
