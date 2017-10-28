@@ -222,6 +222,22 @@ module.exports.error['bad_crc.zip'] = function(test) {
         Promise.all([oneEntry, allEntries]).then(function() { test.done(); });
     });
 };
+module.exports.error['evil.zip'] = function(test) {
+    test.expect(2);
+    var zip = new StreamZip({ file: 'test/err/evil.zip' });
+    zip.on('ready', function() {
+        test.ok(false, 'Should throw an error');
+    });
+    zip.on('error', function(err) {
+        var entryName = '..\\..\\..\\..\\..\\..\\..\\..\\file.txt';
+        test.equal(err.message, 'Malicious entry: ' + entryName);
+        var zip = new StreamZip({ file: 'test/err/evil.zip', skipEntryNameValidation: true });
+        zip.on('ready', function() {
+            test.ok(zip.entry(entryName), 'Entry exists');
+            test.done();
+        });
+    });
+};
 
 module.exports.parallel = {};
 module.exports.parallel['streaming 100 files'] = function(test) {
