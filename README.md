@@ -90,7 +90,6 @@ zip.on('ready', () => {
 Read a file as buffer in sync way
 ```javascript
 zip.on('ready', () => {
-    // read file as buffer (this method is sync)
     const data = zip.entryDataSync('path/inside/zip.txt');
     zip.close();
 });
@@ -106,7 +105,6 @@ zip.on('extract', (entry, file) => {
 `entry` event is generated for every entry during loading
 ```javascript
 zip.on('entry', entry => {
-    // called on load, when entry description has been read
     // you can already stream this entry, without waiting until all entry descriptions are read (suitable for very large archives)
     console.log(`Read entry ${entry.name}`);
 });
