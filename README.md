@@ -20,7 +20,6 @@ Features:
 
 Open a zip file
 ```javascript
-// Open a zip file
 const StreamZip = require('node-stream-zip');
 const zip = new StreamZip({
     file: 'archive.zip',
@@ -111,7 +110,13 @@ zip.on('entry', entry => {
 });
 ```
 
-If you pass `storeEntries: true` to constructor, you will be able to access entries inside zip archive with:
+# Options
+
+You can pass these options to the constructor
+- `storeEntries: true` - you will be able to work with entries inside zip archive, otherwise the only way to access them is `entry` event
+- `skipEntryNameValidation: true` - by default, entry name is checked for malicious characters, like `../` or `c:\123`, pass this flag to disable validation errors
+
+# Methods
 
 - `zip.entries()` - get all entries description
 - `zip.entry(name)` - get entry description by name

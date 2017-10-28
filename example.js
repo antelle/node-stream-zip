@@ -2,7 +2,6 @@ console.log('Loading zip...');
 var StreamZip = require('./node_stream_zip.js');
 var zip = new StreamZip({
     file: './test/ok/normal.zip'
-    //file: 'd:/temp/node_src.zip'
 });
 zip.on('error', function(err) { console.error('ERROR: ' + err); });
 zip.on('ready', function() {

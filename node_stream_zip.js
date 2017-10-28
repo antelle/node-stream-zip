@@ -336,6 +336,9 @@ var StreamZip = function(config) {
                     return;
                 }
                 entry.read(buffer, bufferPos);
+                if (!config.skipEntryNameValidation) {
+                    entry.validateName();
+                }
                 if (entries)
                     entries[entry.name] = entry;
                 that.emit('entry', entry);
@@ -716,6 +719,12 @@ ZipEntry.prototype.read = function(data, offset) {
         offset += this.extraLen;
     }
     this.comment = this.comLen ? data.slice(offset, offset + this.comLen).toString() : null;
+};
+
+ZipEntry.prototype.validateName = function() {
+    if (/\\|^\w+:|^\/|(^|\/)\.\.(\/|$)/.test(this.name)) {
+        throw new Error('Malicious entry: ' + this.name);
+    }
 };
 
 ZipEntry.prototype.readExtra = function(data, offset) {

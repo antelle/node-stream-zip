@@ -1,5 +1,9 @@
 Release notes
 -------------
+##### v1.4.0 (2017-10-28)
+Archives with malicious entries will throw an error  
+`+` option to disable it: `skipEntryNameValidation`
+
 ##### v1.3.8 (2017-10-27)
 Fix #20: throw errors
 
