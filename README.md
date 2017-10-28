@@ -27,7 +27,7 @@ const zip = new StreamZip({
 });
 
 // Handle errors
-zip.on('error', err => { /*handle*/ });
+zip.on('error', err => { /*...*/ });
 ```
 
 List entries
@@ -46,7 +46,6 @@ zip.on('ready', () => {
 Stream one entry to stdout
 ```javascript
 zip.on('ready', () => {
-    // stream to stdout
     zip.stream('path/inside/zip.txt', (err, stm) => {
         stm.pipe(process.stdout);
         stm.on('end', () => zip.close());
