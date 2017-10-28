@@ -87,7 +87,7 @@ zip.on('ready', () => {
 });
 ```
 
-Read file as buffer in sync way
+Read a file as buffer in sync way
 ```javascript
 zip.on('ready', () => {
     // read file as buffer (this method is sync)
