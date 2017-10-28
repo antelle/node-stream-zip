@@ -105,7 +105,8 @@ zip.on('extract', (entry, file) => {
 `entry` event is generated for every entry during loading
 ```javascript
 zip.on('entry', entry => {
-    // you can already stream this entry, without waiting until all entry descriptions are read (suitable for very large archives)
+    // you can already stream this entry,
+    // without waiting until all entry descriptions are read (suitable for very large archives)
     console.log(`Read entry ${entry.name}`);
 });
 ```
