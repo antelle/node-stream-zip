@@ -81,11 +81,7 @@ Extract everything
 zip.on('ready', () => {
     fs.mkdirSync('extracted');
     zip.extract(null, './extracted', (err, count) => {
-        if (err) {
-            console.log('Extract error', err);
-        } else {
-            console.log(`Extracted ${count} entries`);
-        }
+        console.log(err ? 'Extract error' : `Extracted ${count} entries`);
         zip.close();
     });
 });
