@@ -50,9 +50,7 @@ zip.on('ready', () => {
     // stream to stdout
     zip.stream('path/inside/zip.txt', (err, stm) => {
         stm.pipe(process.stdout);
-        stm.on('end', () => {
-            zip.close();
-        });
+        stm.on('end', () => zip.close());
     });
 });
 ```
