@@ -34,7 +34,7 @@ List entries
 ```javascript
 zip.on('ready', () => {
     console.log('Entries read: ' + zip.entriesCount);
-    for (const entry of Object.values(entries)) {
+    for (const entry of Object.values(zip.entries())) {
         const desc = entry.isDirectory ? 'directory' : `${entry.size} bytes`;
         console.log(`Entry ${entry.name}: ${desc}`);
     }
