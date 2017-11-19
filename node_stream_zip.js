@@ -538,11 +538,20 @@ var StreamZip = function(config) {
                         files.push(childEntry);
                         relPath = path.dirname(relPath);
                     }
-                    if (relPath && !allDirs[relPath] && relPath[0] !== '.') {
+                    if (relPath && !allDirs[relPath] && relPath !== '.') {
                         allDirs[relPath] = true;
                         var parts = relPath.split('/').filter(function (f) { return f; });
                         if (parts.length)
                             dirs.push(parts);
+                        while (parts.length > 1) {
+                            parts = parts.slice(0, parts.length - 1);
+                            var partsPath = parts.join('/');
+                            if (allDirs[partsPath] || partsPath === '.') {
+                                break;
+                            }
+                            allDirs[partsPath] = true;
+                            dirs.push(parts);
+                        }
                     }
                 }
             }

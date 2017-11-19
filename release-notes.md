@@ -1,5 +1,8 @@
 Release notes
 -------------
+##### v1.4.1 (2017-11-19)
+`-` fixed folder extraction
+
 ##### v1.4.0 (2017-10-28)
 Archives with malicious entries will throw an error  
 `+` option to disable it: `skipEntryNameValidation`
