@@ -1,5 +1,8 @@
 Release notes
 -------------
+##### v1.4.2 (2017-12-02)
+`-` option to specify custom fs: `StreamZip.setFs`
+
 ##### v1.4.1 (2017-11-19)
 `-` fixed folder extraction
 

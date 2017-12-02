@@ -585,6 +585,10 @@ var StreamZip = function(config) {
     };
 };
 
+StreamZip.setFs = function(customFs) {
+    fs = customFs;
+};
+
 util.inherits(StreamZip, events.EventEmitter);
 
 // endregion
