@@ -142,6 +142,22 @@ module.exports.ok['zip64.zip'] = function(test) {
     });
 };
 
+module.exports.ok['openEntry'] = function(test) {
+    test.expect(3);
+    var zip = new StreamZip({ file: 'test/ok/normal.zip' });
+    zip.on('ready', function () {
+        var entries = zip.entries();
+        var entry = entries['doc/changelog-foot.html'];
+        test.ok(entry);
+        var entryBeforeOpen = Object.assign({}, entry);
+        zip.openEntry(entry, (err, entryAfterOpen) => {
+            test.equal(err, undefined);
+            test.notDeepEqual(entryBeforeOpen, entryAfterOpen);
+            test.done();
+        }, false);
+    });
+};
+
 module.exports.error = {};
 module.exports.error['enc_aes.zip'] = function(test) {
     test.expect(1);
