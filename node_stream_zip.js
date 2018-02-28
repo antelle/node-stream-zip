@@ -371,7 +371,7 @@ var StreamZip = function(config) {
     };
 
     this.stream = function(entry, callback) {
-        return openEntry(entry, function(err, entry) {
+        return this.openEntry(entry, function(err, entry) {
             if (err)
                 return callback(err);
             var offset = dataOffset(entry);
@@ -390,7 +390,7 @@ var StreamZip = function(config) {
 
     this.entryDataSync = function(entry) {
         var err = null;
-        openEntry(entry, function(e, en) {
+        this.openEntry(entry, function(e, en) {
             err = e;
             entry = en;
         }, true);
@@ -420,7 +420,7 @@ var StreamZip = function(config) {
         return data;
     };
 
-    function openEntry(entry, callback, sync) {
+    this.openEntry = function(entry, callback, sync) {
         if (typeof entry === 'string') {
             checkEntriesExist();
             entry = entries[entry];
@@ -446,7 +446,7 @@ var StreamZip = function(config) {
             }
             callback(readEx, entry);
         }).read(sync);
-    }
+    };
 
     function dataOffset(entry) {
         return entry.offset + consts.LOCHDR + entry.fnameLen + entry.extraLen;
