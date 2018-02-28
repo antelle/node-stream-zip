@@ -1,7 +1,10 @@
 Release notes
 -------------
+##### v1.5.0 (2018-02-28)
+`+` openEntry method
+
 ##### v1.4.2 (2017-12-02)
-`-` option to specify custom fs: `StreamZip.setFs`
+`+` option to specify custom fs: `StreamZip.setFs`
 
 ##### v1.4.1 (2017-11-19)
 `-` fixed folder extraction
