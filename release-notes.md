@@ -1,5 +1,8 @@
 Release notes
 -------------
+##### v1.6.0 (2018-03-22)
+`+` callback in `close` method
+
 ##### v1.5.0 (2018-02-28)
 `+` openEntry method
 
