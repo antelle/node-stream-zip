@@ -576,11 +576,15 @@ var StreamZip = function(config) {
         }
     };
 
-    this.close = function() {
+    this.close = function(callback) {
         if (fd) {
-            fs.close(fd, function() {
+            fs.close(fd, function(err) {
                 fd = null;
+                if (callback)
+                    callback(err);
             });
+        } else if (callback) {
+            callback();
         }
     };
 };
