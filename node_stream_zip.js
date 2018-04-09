@@ -658,6 +658,27 @@ CentralDirectoryZip64Header.prototype.read = function(data) {
 var ZipEntry = function() {
 };
 
+function parse_zip_time(timebytes, datebytes) {
+    var bits = function(dec, size) {
+        var b = (dec >>> 0).toString(2);
+        while( b.length < size ) b = '0' + b;
+        return b.split('');
+    }
+    var timebits = bits(timebytes, 16);
+    var datebits = bits(datebytes, 16);
+
+    var mt = {
+        h: parseInt(timebits.slice(0,5).join(''), 2) * 2,
+        m: parseInt(timebits.slice(5,11).join(''), 2),
+        s: parseInt(timebits.slice(11,16).join(''), 2),
+        Y: parseInt(datebits.slice(0,7).join(''), 2) + 1980,
+        M: parseInt(datebits.slice(7,11).join(''), 2),
+        D: parseInt(datebits.slice(11,16).join(''), 2),
+    };
+    var dt_str = [mt.Y, mt.M, mt.D].join('-') + ' ' + [mt.h, mt.m, mt.s].join(':') + ' GMT+0';
+    return new Date(dt_str).getTime();
+}
+
 ZipEntry.prototype.readHeader = function(data, offset) {
     // data should be 46 bytes and start with "PK 01 02"
     if (data.length < offset + consts.CENHDR || data.readUInt32LE(offset) != consts.CENSIG) {
@@ -672,7 +693,10 @@ ZipEntry.prototype.readHeader = function(data, offset) {
     // compression method
     this.method = data.readUInt16LE(offset + consts.CENHOW);
     // modification time (2 bytes time, 2 bytes date)
-    this.time = data.readUInt32LE(offset + consts.CENTIM);
+    var timebytes = data.readUInt16LE(offset + consts.CENTIM);
+    var datebytes = data.readUInt16LE(offset + consts.CENTIM + 2);
+    this.time = parse_zip_time(timebytes, datebytes);
+
     // uncompressed file crc-32 value
     this.crc = data.readUInt32LE(offset + consts.CENCRC);
     // compressed size
@@ -707,7 +731,10 @@ ZipEntry.prototype.readDataHeader = function(data) {
     // compression method
     this.method = data.readUInt16LE(consts.LOCHOW);
     // modification time (2 bytes time ; 2 bytes date)
-    this.time = data.readUInt32LE(consts.LOCTIM);
+    var timebytes = data.readUInt16LE(consts.LOCTIM);
+    var datebytes = data.readUInt16LE(consts.LOCTIM + 2);
+    this.time = parse_zip_time(timebytes, datebytes);
+
     // uncompressed file crc-32 value
     this.crc = data.readUInt32LE(consts.LOCCRC) || this.crc;
     // compressed size
