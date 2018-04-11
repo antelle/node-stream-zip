@@ -668,9 +668,9 @@ function parse_zip_time(timebytes, datebytes) {
     var datebits = bits(datebytes, 16);
 
     var mt = {
-        h: parseInt(timebits.slice(0,5).join(''), 2) * 2,
+        h: parseInt(timebits.slice(0,5).join(''), 2),
         m: parseInt(timebits.slice(5,11).join(''), 2),
-        s: parseInt(timebits.slice(11,16).join(''), 2),
+        s: parseInt(timebits.slice(11,16).join(''), 2) * 2,
         Y: parseInt(datebits.slice(0,7).join(''), 2) + 1980,
         M: parseInt(datebits.slice(7,11).join(''), 2),
         D: parseInt(datebits.slice(11,16).join(''), 2),
