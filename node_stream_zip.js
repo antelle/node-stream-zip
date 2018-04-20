@@ -658,14 +658,16 @@ CentralDirectoryZip64Header.prototype.read = function(data) {
 var ZipEntry = function() {
 };
 
-function parse_zip_time(timebytes, datebytes) {
-    var bits = function(dec, size) {
-        var b = (dec >>> 0).toString(2);
-        while( b.length < size ) b = '0' + b;
-        return b.split('');
-    }
-    var timebits = bits(timebytes, 16);
-    var datebits = bits(datebytes, 16);
+function toBits(dec, size) {
+    var b = (dec >>> 0).toString(2);
+    while (b.length < size)
+        b = '0' + b;
+    return b.split('');
+}
+
+function parseZipTime(timebytes, datebytes) {
+    var timebits = toBits(timebytes, 16);
+    var datebits = toBits(datebytes, 16);
 
     var mt = {
         h: parseInt(timebits.slice(0,5).join(''), 2),
@@ -695,7 +697,7 @@ ZipEntry.prototype.readHeader = function(data, offset) {
     // modification time (2 bytes time, 2 bytes date)
     var timebytes = data.readUInt16LE(offset + consts.CENTIM);
     var datebytes = data.readUInt16LE(offset + consts.CENTIM + 2);
-    this.time = parse_zip_time(timebytes, datebytes);
+    this.time = parseZipTime(timebytes, datebytes);
 
     // uncompressed file crc-32 value
     this.crc = data.readUInt32LE(offset + consts.CENCRC);
@@ -733,7 +735,7 @@ ZipEntry.prototype.readDataHeader = function(data) {
     // modification time (2 bytes time ; 2 bytes date)
     var timebytes = data.readUInt16LE(consts.LOCTIM);
     var datebytes = data.readUInt16LE(consts.LOCTIM + 2);
-    this.time = parse_zip_time(timebytes, datebytes);
+    this.time = parseZipTime(timebytes, datebytes);
 
     // uncompressed file crc-32 value
     this.crc = data.readUInt32LE(consts.LOCCRC) || this.crc;
