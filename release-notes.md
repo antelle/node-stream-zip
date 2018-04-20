@@ -1,5 +1,8 @@
 Release notes
 -------------
+##### v1.7.0 (2018-04-20)
+`+` parsing time values
+
 ##### v1.6.0 (2018-03-22)
 `+` callback in `close` method
 
