@@ -43,6 +43,13 @@ zip.on('ready', () => {
 });
 ```
 
+Once the header has been read and the `ready` event emitted you can access a "fingerprint" of the zip file to confirm its contents are identical to another zip file. The fingerprint is the MD5 sum of a 0-byte concatenated sorted list of the CRC values for each file, any two zip files with identical file contents will have the same fingerprints, though the file names, paths and modification times of the files in the zip may differ
+```javascript
+zip.on('ready', () => {
+    console.log('Zip fingerprint: ' + zip.fingerprint);
+});
+```
+
 Stream one entry to stdout
 ```javascript
 zip.on('ready', () => {
