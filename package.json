@@ -31,5 +31,8 @@
   },
   "devDependencies": {
     "nodeunit": "^0.9.1"
+  },
+  "dependencies": {
+    "md5": "^2.2.1"
   }
 }

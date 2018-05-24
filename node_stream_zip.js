@@ -8,6 +8,7 @@
 var
     util = require('util'),
     fs = require('fs'),
+    md5 = require('md5'),
     path = require('path'),
     events = require('events'),
     zlib = require('zlib'),
@@ -341,12 +342,24 @@ var StreamZip = function(config) {
                 }
                 if (entries)
                     entries[entry.name] = entry;
+
+                if( typeof(that.fingerprint_data) == "undefined" ) that.fingerprint_data = [];
+                if( entry.crc != 0 ) { //0-byte crc is a directory header, some OS that made the zip will exclude these, so don't use it for fingerprinting
+                    that.fingerprint_data.push(entry.crc);
+                }
+
                 that.emit('entry', entry);
                 op.entry = entry = null;
                 op.entriesLeft--;
                 op.pos += entryHeaderSize;
                 bufferPos += entryHeaderSize;
             }
+
+            //the fingerprint will let us identify identical zip files without having to parse them past the header
+            //sort the list of CRCs so we don't care how the zipfile ordered them, we do care about omissions and additions though
+            that.fingerprint = md5(that.fingerprint_data.sort().join("\0"));
+            delete that['fingerprint_data'];
+
             that.emit('ready');
         } catch (err) {
             that.emit('error', err);
