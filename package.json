@@ -31,5 +31,9 @@
   },
   "devDependencies": {
     "nodeunit": "^0.9.1"
+  },
+  "dependencies": {
+    "crc": "^3.5.0",
+    "md5": "^2.2.1"
   }
 }
