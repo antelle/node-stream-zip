@@ -397,7 +397,7 @@ var StreamZip = function(config) {
         if (err)
             throw err;
         var
-            data = new Buffer(entry.compressedSize),
+            data = Buffer.alloc(entry.compressedSize),
             bytesRead;
         new FsRead(fd, data, 0, entry.compressedSize, dataOffset(entry), function(e, br) {
             err = e;
@@ -431,7 +431,7 @@ var StreamZip = function(config) {
             return callback('Entry is not file');
         if (!fd)
             return callback('Archive closed');
-        var buffer = new Buffer(consts.LOCHDR);
+        var buffer = Buffer.alloc(consts.LOCHDR);
         new FsRead(fd, buffer, 0, buffer.length, entry.offset, function(err) {
             if (err)
                 return callback(err);
@@ -867,7 +867,7 @@ FsRead.prototype.readCallback = function(sync, err, bytesRead) {
 
 var FileWindowBuffer = function(fd) {
     this.position = 0;
-    this.buffer = new Buffer(0);
+    this.buffer = Buffer.alloc(0);
 
     var fsOp = null;
 
@@ -879,14 +879,14 @@ var FileWindowBuffer = function(fd) {
     this.read = function(pos, length, callback) {
         this.checkOp();
         if (this.buffer.length < length)
-            this.buffer = new Buffer(length);
+            this.buffer = Buffer.alloc(length);
         this.position = pos;
         fsOp = new FsRead(fd, this.buffer, 0, length, this.position, callback).read();
     };
 
     this.expandLeft = function(length, callback) {
         this.checkOp();
-        this.buffer = Buffer.concat([new Buffer(length), this.buffer]);
+        this.buffer = Buffer.concat([Buffer.alloc(length), this.buffer]);
         this.position -= length;
         if (this.position < 0)
             this.position = 0;
@@ -896,7 +896,7 @@ var FileWindowBuffer = function(fd) {
     this.expandRight = function(length, callback) {
         this.checkOp();
         var offset = this.buffer.length;
-        this.buffer = Buffer.concat([this.buffer, new Buffer(length)]);
+        this.buffer = Buffer.concat([this.buffer, Buffer.alloc(length)]);
         fsOp = new FsRead(fd, this.buffer, offset, length, this.position + offset, callback).read();
     };
 
@@ -928,7 +928,7 @@ var EntryDataReaderStream = function(fd, offset, length) {
 util.inherits(EntryDataReaderStream, stream.Readable);
 
 EntryDataReaderStream.prototype._read = function(n) {
-    var buffer = new Buffer(Math.min(n, this.length - this.pos));
+    var buffer = Buffer.alloc(Math.min(n, this.length - this.pos));
     if (buffer.length) {
         fs.read(this.fd, buffer, 0, buffer.length, this.offset + this.pos, this.readCallback);
     } else {
@@ -996,7 +996,7 @@ CrcVerify.prototype.data = function(data) {
     this.state.crc = crc;
     this.state.size += data.length;
     if (this.state.size >= this.size) {
-        var buf = new Buffer(4);
+        var buf = Buffer.alloc(4);
         buf.writeInt32LE(~this.state.crc & 0xffffffff, 0);
         crc = buf.readUInt32LE(0);
         if (crc !== this.crc)
@@ -1010,7 +1010,7 @@ CrcVerify.getCrcTable = function() {
     var crcTable = CrcVerify.crcTable;
     if (!crcTable) {
         CrcVerify.crcTable = crcTable = [];
-        var b = new Buffer(4);
+        var b = Buffer.alloc(4);
         for (var n = 0; n < 256; n++) {
             var c = n;
             for (var k = 8; --k >= 0; )

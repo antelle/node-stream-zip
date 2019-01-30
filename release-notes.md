@@ -1,5 +1,8 @@
 Release notes
 -------------
+##### v1.8.0 (2019-01-30)
+`+` fixed deprecations
+
 ##### v1.7.0 (2018-04-20)
 `+` parsing time values
 
