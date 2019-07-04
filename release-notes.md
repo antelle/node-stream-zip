@@ -1,5 +1,8 @@
 Release notes
 -------------
+##### v1.8.2 (2019-07-04)
+`+` upgraded modules
+
 ##### v1.8.1 (2019-07-04)
 `+` included the license
 
