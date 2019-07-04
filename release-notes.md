@@ -1,5 +1,8 @@
 Release notes
 -------------
+##### v1.8.1 (2019-07-04)
+`+` included the license
+
 ##### v1.8.0 (2019-01-30)
 `+` fixed deprecations
 

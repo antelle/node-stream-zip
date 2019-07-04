@@ -1,6 +1,6 @@
 /**
- * @license node-stream-zip | (c) 2015 Antelle | https://github.com/antelle/node-stream-zip/blob/master/MIT-LICENSE.txt
- * Portions copyright https://github.com/cthackers/adm-zip | https://raw.githubusercontent.com/cthackers/adm-zip/master/MIT-LICENSE.txt
+ * @license node-stream-zip | (c) 2015 Antelle | https://github.com/antelle/node-stream-zip/blob/master/LICENSE
+ * Portions copyright https://github.com/cthackers/adm-zip | https://raw.githubusercontent.com/cthackers/adm-zip/master/LICENSE
  */
 
 // region Deps
