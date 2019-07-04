@@ -16,6 +16,7 @@
   },
   "license": "MIT",
   "files": [
+    "LICENSE",
     "node_stream_zip.js"
   ],
   "scripts": {
