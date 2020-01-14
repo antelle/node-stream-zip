@@ -1,5 +1,8 @@
 Release notes
 -------------
+##### v1.9.1 (2020-01-14)
+`-` fixed callbacks in close()
+
 ##### v1.9.0 (2020-01-14)
 `*` closing a file cancels all pending events
 

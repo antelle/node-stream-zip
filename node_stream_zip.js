@@ -579,7 +579,8 @@ var StreamZip = function(config) {
 
     this.close = function(callback) {
         if (closed) {
-            callback();
+            if (callback)
+                callback();
         } else {
             closed = true;
             fs.close(fd, function(err) {
