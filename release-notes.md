@@ -1,5 +1,8 @@
 Release notes
 -------------
+##### v1.9.0 (2020-01-14)
+`*` closing a file cancels all pending events
+
 ##### v1.8.2 (2019-07-04)
 `+` upgraded modules
 

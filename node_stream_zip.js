@@ -155,6 +155,7 @@ var StreamZip = function(config) {
         that = this,
         op,
         centralDirectory,
+        closed,
 
         entries = config.storeEntries !== false ? {} : null,
         fileName = config.file;
@@ -577,14 +578,22 @@ var StreamZip = function(config) {
     };
 
     this.close = function(callback) {
-        if (fd) {
+        if (closed) {
+            callback();
+        } else {
+            closed = true;
             fs.close(fd, function(err) {
                 fd = null;
                 if (callback)
                     callback(err);
             });
-        } else if (callback) {
-            callback();
+        }
+    };
+
+    var originalEmit = events.EventEmitter.prototype.emit;
+    this.emit = function() {
+        if (!closed) {
+            return originalEmit.apply(this, arguments);
         }
     };
 };
