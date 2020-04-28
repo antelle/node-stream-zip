@@ -1,5 +1,8 @@
 Release notes
 -------------
+##### v1.9.2 (2020-04-28)
+`-` fixed close() when zip was not found
+
 ##### v1.9.1 (2020-01-14)
 `-` fixed callbacks in close()
 
