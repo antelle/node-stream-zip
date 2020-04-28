@@ -255,6 +255,21 @@ module.exports.error['evil.zip'] = function(test) {
     });
 };
 
+module.exports.error['zip does not exist'] = function(test) {
+    test.expect(1);
+    var zip = new StreamZip({ file: 'test/err/doesnotexist.zip' });
+    zip.on('ready', function() {
+        test.ok(false, 'Should throw an error');
+    });
+    zip.on('error', function(err) {
+        test.equal(err.message, "ENOENT: no such file or directory, open 'test/err/doesnotexist.zip'");
+
+        try { zip.close(); } catch (e) { test.ok(false, 'zip.close() should not throw: ' + e); }
+
+        test.done();
+    });
+};
+
 module.exports.parallel = {};
 module.exports.parallel['streaming 100 files'] = function(test) {
     var num = 100;
