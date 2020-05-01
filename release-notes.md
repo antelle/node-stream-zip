@@ -1,5 +1,8 @@
 Release notes
 -------------
+##### v1.10.0 (2020-05-01)
+`+` typescript interface
+
 ##### v1.9.2 (2020-04-28)
 `-` fixed close() when zip was not found
 
