@@ -1,5 +1,8 @@
 Release notes
 -------------
+##### v1.11.0 (2020-05-13)
+`+` removed deflate64
+
 ##### v1.10.0 (2020-05-01)
 `+` missing file added
 

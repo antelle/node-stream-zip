@@ -269,6 +269,16 @@ module.exports.error['zip does not exist'] = function(test) {
         test.done();
     });
 };
+module.exports.error['deflate64.zip'] = function(test) {
+    test.expect(1);
+    var zip = new StreamZip({ file: 'test/err/deflate64.zip' });
+    zip.on('ready', function() {
+        zip.stream('README.md', function(err) {
+            test.equal(err, 'Unknown compression method: 9');
+            test.done();
+        });
+    });
+};
 
 module.exports.parallel = {};
 module.exports.parallel['streaming 100 files'] = function(test) {

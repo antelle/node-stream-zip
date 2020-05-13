@@ -93,7 +93,7 @@ var consts = {
     IMPLODED         : 6, // imploded
     // 7 reserved
     DEFLATED         : 8, // deflated
-    ENHANCED_DEFLATED: 9, // enhanced deflated
+    ENHANCED_DEFLATED: 9, // deflate64
     PKWARE           : 10,// PKWare DCL imploded
     // 11 reserved
     BZIP2            : 12, //  compressed using BZIP2
@@ -378,7 +378,7 @@ var StreamZip = function(config) {
             var offset = dataOffset(entry);
             var entryStream = new EntryDataReaderStream(fd, offset, entry.compressedSize);
             if (entry.method === consts.STORED) {
-            } else if (entry.method === consts.DEFLATED || entry.method === consts.ENHANCED_DEFLATED) {
+            } else if (entry.method === consts.DEFLATED) {
                 entryStream = entryStream.pipe(zlib.createInflateRaw());
             } else {
                 return callback('Unknown compression method: ' + entry.method);
