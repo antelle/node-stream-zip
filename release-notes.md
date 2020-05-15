@@ -1,5 +1,8 @@
 Release notes
 -------------
+##### v1.11.1 (2020-05-15)
+`+` fixed typescript interface definition
+
 ##### v1.11.0 (2020-05-13)
 `+` removed deflate64
 

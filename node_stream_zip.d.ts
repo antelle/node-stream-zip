@@ -2,8 +2,6 @@
 
 declare module 'node-stream-zip' {
 
-    import {Stream} from 'stream';
-
     interface StreamZipOptions {
         /**
          * File to read
@@ -140,7 +138,7 @@ declare module 'node-stream-zip' {
 
         entries(): ZipEntry[]
 
-        stream(entry: string, callback: (err: any | null, stream?: Stream) => void): void
+        stream(entry: string, callback: (err: any | null, stream?: NodeJS.ReadableStream) => void): void
 
         entryDataSync(entry: string): Buffer
 
