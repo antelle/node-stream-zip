@@ -1,5 +1,8 @@
 Release notes
 -------------
+##### v1.11.2 (2020-06-02)
+`-` fixed some TypeScript definitions  
+
 ##### v1.11.1 (2020-05-15)
 `+` fixed typescript interface definition
 
