@@ -134,9 +134,9 @@ declare module 'node-stream-zip' {
         on(event: 'ready', handler: () => void): void
         on(event: 'extract', handler: (entry: ZipEntry, outPath: string) => void): void
 
-        entry(name: string): ZipEntry
+        entry(name: string): ZipEntry | undefined
 
-        entries(): ZipEntry[]
+        entries(): { [name: string]: ZipEntry }
 
         stream(entry: string, callback: (err: any | null, stream?: NodeJS.ReadableStream) => void): void
 
