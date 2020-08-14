@@ -1,5 +1,8 @@
 Release notes
 -------------
+##### v1.11.3 (2020-08-14)
+`-` fixed parameter type definition  
+
 ##### v1.11.2 (2020-06-02)
 `-` fixed some TypeScript definitions  
 
