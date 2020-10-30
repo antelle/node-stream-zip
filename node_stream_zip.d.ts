@@ -143,13 +143,13 @@ declare module 'node-stream-zip' {
 
         entries(): { [name: string]: ZipEntry }
 
-        stream(entry: string, callback: (err: any | null, stream?: NodeJS.ReadableStream) => void): void
+        stream(entry: string | ZipEntry, callback: (err: any | null, stream?: NodeJS.ReadableStream) => void): void
 
-        entryDataSync(entry: string): Buffer
+        entryDataSync(entry: string | ZipEntry): Buffer
 
-        openEntry(entry: string, callback: (err: any | null, entry?: ZipEntry) => void, sync: boolean): void
+        openEntry(entry: string | ZipEntry, callback: (err: any | null, entry?: ZipEntry) => void, sync: boolean): void
 
-        extract(entry: string | null, outPath: string, callback: (err?: any) => void): void
+        extract(entry: string | ZipEntry | null, outPath: string, callback: (err?: any) => void): void
 
         close(callback?: (err?: any) => void): void
     }
