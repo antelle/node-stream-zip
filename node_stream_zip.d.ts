@@ -30,7 +30,7 @@ declare module 'node-stream-zip' {
             chunkSize?: number
         }
     
-        class ZipEntry {
+        interface ZipEntry {
             /**
              * file name
              */
