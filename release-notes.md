@@ -1,5 +1,8 @@
 Release notes
 -------------
+##### v1.11.4 (2020-10-31)
+`-` fixed type definitions  
+
 ##### v1.11.3 (2020-08-14)
 `-` fixed parameter type definition  
 
