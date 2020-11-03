@@ -1,5 +1,8 @@
 Release notes
 -------------
+##### v1.11.5 (2020-11-03)
+`-` improved type definitions  
+
 ##### v1.11.4 (2020-10-31)
 `-` fixed type definitions  
 
