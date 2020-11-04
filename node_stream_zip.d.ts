@@ -1,6 +1,6 @@
 /// <reference types="node" />
 
-namespace StreamZip {
+declare namespace StreamZip {
     interface StreamZipOptions {
         /**
          * File to read
