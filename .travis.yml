@@ -12,3 +12,4 @@ install:
 
 script:
   - npm test
+  - tsc node_stream_zip.d.ts
