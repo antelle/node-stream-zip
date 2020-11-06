@@ -119,7 +119,7 @@ declare namespace StreamZip {
 type StreamZipOptions = StreamZip.StreamZipOptions;
 type ZipEntry = StreamZip.ZipEntry;
 
-class StreamZip {
+declare class StreamZip {
     constructor(config: StreamZipOptions);
 
     /**
