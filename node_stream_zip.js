@@ -163,18 +163,27 @@ var StreamZip = function(config) {
     open();
 
     function open() {
-        fs.open(fileName, 'r', function(err, f) {
-            if (err)
-                return that.emit('error', err);
-            fd = f;
-            fs.fstat(fd, function(err, stat) {
+        if (config.fd) {
+            fd = config.fd;
+            readFile();
+        } else {
+            fs.open(fileName, 'r', function (err, f) {
                 if (err)
                     return that.emit('error', err);
-                fileSize = stat.size;
-                chunkSize = config.chunkSize || Math.round(fileSize / 1000);
-                chunkSize = Math.max(Math.min(chunkSize, Math.min(128*1024, fileSize)), Math.min(1024, fileSize));
-                readCentralDirectory();
+                fd = f;
+                readFile();
             });
+        }
+    }
+
+    function readFile() {
+        fs.fstat(fd, function(err, stat) {
+            if (err)
+                return that.emit('error', err);
+            fileSize = stat.size;
+            chunkSize = config.chunkSize || Math.round(fileSize / 1000);
+            chunkSize = Math.max(Math.min(chunkSize, Math.min(128*1024, fileSize)), Math.min(1024, fileSize));
+            readCentralDirectory();
         });
     }
 

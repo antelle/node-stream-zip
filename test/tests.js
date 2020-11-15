@@ -158,6 +158,16 @@ module.exports.ok['openEntry'] = function(test) {
     });
 };
 
+module.exports.ok['fd'] = function(test) {
+    test.expect(1);
+    var zip = new StreamZip({ fd: fs.openSync('test/special/tiny.zip', 'r') });
+    zip.on('ready', function() {
+        var actualEentryData = zip.entryDataSync('BSDmakefile').toString('utf8');
+        test.equal(actualEentryData.substr(0, 4), 'all:');
+        test.done();
+    });
+};
+
 module.exports.error = {};
 module.exports.error['enc_aes.zip'] = function(test) {
     test.expect(1);

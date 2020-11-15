@@ -1,5 +1,8 @@
 Release notes
 -------------
+##### v1.12.0 (2020-11-15)
+`+` added an option to pass fd instead of file name  
+
 ##### v1.11.7 (2020-11-06)
 `-` fixed type definitions  
 

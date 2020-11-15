@@ -4,8 +4,15 @@ declare namespace StreamZip {
     interface StreamZipOptions {
         /**
          * File to read
+         * @default undefined
          */
-        file: string
+        file?: string
+
+        /**
+         * Alternatively, you can pass fd here
+         * @default undefined
+         */
+        fd?: number,
 
         /**
          * You will be able to work with entries inside zip archive,
