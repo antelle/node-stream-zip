@@ -1,4 +1,4 @@
-# node-stream-zip [![Build status](https://travis-ci.org/antelle/node-stream-zip.svg?branch=master)](https://travis-ci.org/antelle/node-stream-zip)
+# node-stream-zip ![CI Checks](https://github.com/antelle/node-stream-zip/workflows/CI%20Checks/badge.svg)
 
 node.js library for reading and extraction of ZIP archives.  
 Features:
