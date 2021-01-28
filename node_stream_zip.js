@@ -484,7 +484,7 @@ var StreamZip = function(config) {
                 });
                 fs.open(outPath, 'w', function(err, fdFile) {
                     if (err)
-                        return callback(err || errThrown);
+                        return callback(err);
                     if (errThrown) {
                         fs.close(fd, function() {
                             callback(errThrown);
