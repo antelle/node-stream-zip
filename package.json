@@ -21,6 +21,8 @@
     "node_stream_zip.d.ts"
   ],
   "scripts": {
+    "lint": "eslint node_stream_zip.js test/tests.js",
+    "check-types": "tsc node_stream_zip.d.ts",
     "test": "nodeunit test/tests.js"
   },
   "main": "node_stream_zip.js",
@@ -34,6 +36,8 @@
   },
   "devDependencies": {
     "@types/node": "^14.14.6",
-    "nodeunit": "^0.11.3"
+    "eslint": "^7.19.0",
+    "nodeunit": "^0.11.3",
+    "prettier": "^2.2.1"
   }
 }
