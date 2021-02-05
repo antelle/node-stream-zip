@@ -25,7 +25,7 @@ There are two APIs provided:
 2. [callbacks](#callback-api)
 
 It's recommended to use the new, promise API, however the legacy callback API 
-may be flexible for certain operations.
+may be more flexible for certain operations.
 
 ### Async API
 
