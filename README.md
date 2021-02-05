@@ -23,6 +23,7 @@ npm i node-stream-zip
 There are two APIs provided:
 1. [promise-based / async](#async-api) 
 2. [callbacks](#callback-api)
+
 It's recommended to use the new, promise API, however the legacy callback API 
 may be flexible for certain operations.
 
