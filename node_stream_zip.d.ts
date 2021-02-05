@@ -6,125 +6,141 @@ declare namespace StreamZip {
          * File to read
          * @default undefined
          */
-        file?: string
+        file?: string;
 
         /**
          * Alternatively, you can pass fd here
          * @default undefined
          */
-        fd?: number,
+        fd?: number;
 
         /**
          * You will be able to work with entries inside zip archive,
          * otherwise the only way to access them is entry event
          * @default true
          */
-        storeEntries?: boolean
+        storeEntries?: boolean;
 
         /**
          * By default, entry name is checked for malicious characters, like ../ or c:\123,
          * pass this flag to disable validation error
          * @default false
          */
-        skipEntryNameValidation?: boolean
+        skipEntryNameValidation?: boolean;
 
         /**
          * Filesystem read chunk size
          * @default automatic based on file size
          */
-        chunkSize?: number
+        chunkSize?: number;
     }
 
     interface ZipEntry {
         /**
          * file name
          */
-        name: string
+        name: string;
 
         /**
          * true if it's a directory entry
          */
-        isDirectory: boolean
+        isDirectory: boolean;
 
         /**
          * true if it's a file entry, see also isDirectory
          */
-        isFile: boolean
+        isFile: boolean;
 
         /**
          * file comment
          */
-        comment: string
+        comment: string;
 
         /**
          * if the file is encrypted
          */
-        encrypted: boolean
+        encrypted: boolean;
 
         /**
          * version made by
          */
-        verMade: number
+        verMade: number;
 
         /**
          * version needed to extract
          */
-        version: number
+        version: number;
 
         /**
          * encrypt, decrypt flags
          */
-        flags: number
+        flags: number;
 
         /**
          * compression method
          */
-        method: number
+        method: number;
 
         /**
          * modification time
          */
-        time: number
+        time: number;
 
         /**
          * uncompressed file crc-32 value
          */
-        crc: number
+        crc: number;
 
         /**
          * compressed size
          */
-        compressedSize: number
+        compressedSize: number;
 
         /**
          * uncompressed size
          */
-        size: number
+        size: number;
 
         /**
          * volume number start
          */
-        diskStart: number
+        diskStart: number;
 
         /**
          * internal file attributes
          */
-        inattr: number
+        inattr: number;
 
         /**
          * external file attributes
          */
-        attr: number
+        attr: number;
 
         /**
          * LOC header offset
          */
-        offset: number
+        offset: number;
     }
 }
 
 type StreamZipOptions = StreamZip.StreamZipOptions;
 type ZipEntry = StreamZip.ZipEntry;
+
+declare class StreamZipAsync {
+    constructor(config: StreamZipOptions);
+
+    entriesCount: Promise<number>;
+    comment: Promise<string>;
+
+    entry(name: string): Promise<ZipEntry | undefined>;
+    entries(name: string): Promise<{ [name: string]: ZipEntry }>;
+    entryData(entry: string | ZipEntry): Promise<NodeJS.ReadableStream>;
+    stream(entry: string | ZipEntry): Promise<NodeJS.ReadableStream>;
+    extract(entry: string | ZipEntry | null, outPath: string): Promise<number | undefined>;
+
+    on(event: 'entry', handler: (entry: ZipEntry) => void): void;
+    on(event: 'extract', handler: (entry: ZipEntry, outPath: string) => void): void;
+}
 
 declare class StreamZip {
     constructor(config: StreamZipOptions);
@@ -132,31 +148,44 @@ declare class StreamZip {
     /**
      * number of entries in the archive
      */
-    entriesCount: number
+    entriesCount: number;
 
     /**
      * archive comment
      */
-    comment: string
+    comment: string;
 
-    on(event: 'error', handler: (error: any) => void): void
-    on(event: 'entry', handler: (entry: ZipEntry) => void): void
-    on(event: 'ready', handler: () => void): void
-    on(event: 'extract', handler: (entry: ZipEntry, outPath: string) => void): void
+    on(event: 'error', handler: (error: any) => void): void;
+    on(event: 'entry', handler: (entry: ZipEntry) => void): void;
+    on(event: 'ready', handler: () => void): void;
+    on(event: 'extract', handler: (entry: ZipEntry, outPath: string) => void): void;
 
-    entry(name: string): ZipEntry | undefined
+    entry(name: string): ZipEntry | undefined;
 
-    entries(): { [name: string]: ZipEntry }
+    entries(): { [name: string]: ZipEntry };
 
-    stream(entry: string | ZipEntry, callback: (err: any | null, stream?: NodeJS.ReadableStream) => void): void
+    stream(
+        entry: string | ZipEntry,
+        callback: (err: any | null, stream?: NodeJS.ReadableStream) => void
+    ): void;
 
-    entryDataSync(entry: string | ZipEntry): Buffer
+    entryDataSync(entry: string | ZipEntry): Buffer;
 
-    openEntry(entry: string | ZipEntry, callback: (err: any | null, entry?: ZipEntry) => void, sync: boolean): void
+    openEntry(
+        entry: string | ZipEntry,
+        callback: (err: any | null, entry?: ZipEntry) => void,
+        sync: boolean
+    ): void;
 
-    extract(entry: string | ZipEntry | null, outPath: string, callback: (err?: any) => void): void
+    extract(
+        entry: string | ZipEntry | null,
+        outPath: string,
+        callback: (err?: any, res?: number) => void
+    ): void;
 
-    close(callback?: (err?: any) => void): void
+    close(callback?: (err?: any) => void): void;
+
+    static async: typeof StreamZipAsync;
 }
 
 export = StreamZip;

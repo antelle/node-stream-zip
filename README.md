@@ -12,19 +12,99 @@ Features:
 - deflate, sfx, macosx/windows built-in archives
 - ZIP64 support
 
-# Installation
+## Installation
 
-`$ npm install node-stream-zip`
+```sh
+npm i node-stream-zip
+```
 
-# Usage
+## Usage
+
+There are two APIs provided:
+1. [promise-based / async](#async-api) 
+2. [callbacks](#callback-api)
+It's recommended to use the new, promise API, however the legacy callback API 
+may be flexible for certain operations.
+
+### Async API
 
 Open a zip file
 ```javascript
 const StreamZip = require('node-stream-zip');
-const zip = new StreamZip({
-    file: 'archive.zip',
-    storeEntries: true
+const zip = new StreamZip.async({ file: 'archive.zip' });
+```
+
+List entries
+```javascript
+const entriesCount = await zip.entriesCount;
+console.log(`Entries read: ${entriesCount}`);
+
+const entries = await zip.entries();
+for (const entry of Object.values(entries)) {
+    const desc = entry.isDirectory ? 'directory' : `${entry.size} bytes`;
+    console.log(`Entry ${entry.name}: ${desc}`);
+}
+
+// Do not forget to close the file once you're done
+await zip.close();
+```
+
+Stream one entry to stdout
+```javascript
+const srm = await zip.stream('path/inside/zip.txt');
+stm.pipe(process.stdout);
+stm.on('end', () => zip.close());
+```
+
+Extract one file to disk
+```javascript
+await zip.extract('path/inside/zip.txt', './extracted.txt');
+await zip.close();
+```
+
+Extract a folder from archive to disk
+```javascript
+fs.mkdirSync('extracted');
+await zip.extract('path/inside/zip/', './extracted');
+zip.close();
+```
+
+Extract everything
+```javascript
+fs.mkdirSync('extracted');
+const count = await zip.extract(null, './extracted');
+console.log(`Extracted ${count} entries`);
+await zip.close();
+```
+
+Read a file as buffer in sync way
+```javascript
+const data = await zip.entryData('path/inside/zip.txt');
+await zip.close();
+```
+
+When extracting a folder, you can listen to `extract` event
+```javascript
+zip.on('extract', (entry, file) => {
+    console.log(`Extracted ${entry.name} to ${file}`);
 });
+```
+
+`entry` event is generated for every entry during loading
+```javascript
+zip.on('entry', entry => {
+    // you can already stream this entry,
+    // without waiting until all entry descriptions are read (suitable for very large archives)
+    console.log(`Read entry ${entry.name}`);
+});
+```
+
+### Callback API
+
+Open a zip file
+```javascript
+const StreamZip = require('node-stream-zip');
+const zip = new StreamZip({ file: 'archive.zip' });
 
 // Handle errors
 zip.on('error', err => { /*...*/ });
@@ -39,7 +119,7 @@ zip.on('ready', () => {
         console.log(`Entry ${entry.name}: ${desc}`);
     }
     // Do not forget to close the file once you're done
-    zip.close()
+    zip.close();
 });
 ```
 
@@ -109,13 +189,13 @@ zip.on('entry', entry => {
 });
 ```
 
-# Options
+## Options
 
 You can pass these options to the constructor
 - `storeEntries: true` - you will be able to work with entries inside zip archive, otherwise the only way to access them is `entry` event
 - `skipEntryNameValidation: true` - by default, entry name is checked for malicious characters, like `../` or `c:\123`, pass this flag to disable validation errors
 
-# Methods
+## Methods
 
 - `zip.entries()` - get all entries description
 - `zip.entry(name)` - get entry description by name
@@ -123,16 +203,18 @@ You can pass these options to the constructor
 - `zip.entryDataSync(entry)` - get entry data in sync way
 - `zip.close()` - cleanup after all entries have been read, streamed, extracted, and you don't need the archive
 
-# Building
+## Building
 
 The project doesn't require building. To run unit tests with [nodeunit](https://github.com/caolan/nodeunit):  
-`$ npm test`
+```sh
+npm test
+```
 
-# Known issues
+## Known issues
 
 - [utf8](https://github.com/rubyzip/rubyzip/wiki/Files-with-non-ascii-filenames) file names
 - AES encrypted files
 
-# Contributors
+## Contributors
 
 ZIP parsing code has been partially forked from [cthackers/adm-zip](https://github.com/cthackers/adm-zip) (MIT license).

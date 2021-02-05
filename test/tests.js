@@ -143,7 +143,9 @@ function rmdirSync(dir) {
 module.exports.ok = {};
 const filesOk = fs.readdirSync('test/ok');
 filesOk.forEach((file) => {
-    module.exports.ok[file] = testFileOk.bind(null, file);
+    if (path.extname(file).length === 4) {
+        module.exports.ok[file] = (test) => testFileOk(file, test);
+    }
 });
 
 module.exports.ok['tiny.zip'] = function (test) {
@@ -207,7 +209,7 @@ module.exports.error['enc_aes.zip'] = function (test) {
     const zip = new StreamZip({ file: 'test/err/enc_aes.zip' });
     zip.on('ready', () => {
         zip.stream('README.md', (err) => {
-            test.equal(err, 'Entry encrypted');
+            test.equal(err.message, 'Entry encrypted');
             test.done();
         });
     });
@@ -217,7 +219,7 @@ module.exports.error['enc_zipcrypto.zip'] = function (test) {
     const zip = new StreamZip({ file: 'test/err/enc_zipcrypto.zip' });
     zip.on('ready', () => {
         zip.stream('README.md', (err) => {
-            test.equal(err, 'Entry encrypted');
+            test.equal(err.message, 'Entry encrypted');
             test.done();
         });
     });
@@ -227,7 +229,7 @@ module.exports.error['lzma.zip'] = function (test) {
     const zip = new StreamZip({ file: 'test/err/lzma.zip' });
     zip.on('ready', () => {
         zip.stream('README.md', (err) => {
-            test.equal(err, 'Unknown compression method: 14');
+            test.equal(err.message, 'Unknown compression method: 14');
             test.done();
         });
     });
@@ -239,7 +241,7 @@ module.exports.error['rar.rar'] = function (test) {
         test.ok(false, 'Should throw an error');
     });
     zip.on('error', (err) => {
-        test.equal(err, 'Bad archive');
+        test.equal(err.message, 'Bad archive');
         test.done();
     });
 };
@@ -328,7 +330,7 @@ module.exports.error['deflate64.zip'] = function (test) {
     const zip = new StreamZip({ file: 'test/err/deflate64.zip' });
     zip.on('ready', () => {
         zip.stream('README.md', (err) => {
-            test.equal(err, 'Unknown compression method: 9');
+            test.equal(err.message, 'Unknown compression method: 9');
             test.done();
         });
     });
@@ -387,6 +389,32 @@ module.exports['callback exception'] = function (test) {
             stream.pipe(downstream);
         });
     });
+};
+
+module.exports['async.entriesCount'] = async (test) => {
+    const zip = new StreamZip.async({ file: 'test/ok/normal.zip' });
+    let entryEventCount = 0;
+    zip.on('entry', () => entryEventCount++);
+    test.equal(await zip.entriesCount, 10);
+    test.equal(await zip.comment, null);
+    test.equal(entryEventCount, 10);
+    test.done();
+};
+
+module.exports['async.entry'] = async (test) => {
+    const zip = new StreamZip.async({ file: 'test/ok/normal.zip' });
+    const entry = await zip.entry('README.md');
+    test.ok(entry);
+    test.equal(entry.name, 'README.md');
+    test.done();
+};
+
+module.exports['async.entryData'] = async (test) => {
+    const zip = new StreamZip.async({ file: 'test/ok/normal.zip' });
+    const data = await zip.entryData('README.md');
+    test.ok(data);
+    test.ok(data.toString().includes('Evented I/O for V8 javascript'));
+    test.done();
 };
 
 module.exports.setUp = function (done) {

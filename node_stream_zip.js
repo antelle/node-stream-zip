@@ -176,7 +176,7 @@ const StreamZip = function (config) {
 
     function readUntilFoundCallback(err, bytesRead) {
         if (err || !bytesRead) {
-            return that.emit('error', err || 'Archive read error');
+            return that.emit('error', err || new Error('Archive read error'));
         }
         let pos = op.lastPos;
         let bufferPosition = pos - op.win.position;
@@ -194,12 +194,12 @@ const StreamZip = function (config) {
             }
         }
         if (pos === minPos) {
-            return that.emit('error', 'Bad archive');
+            return that.emit('error', new Error('Bad archive'));
         }
         op.lastPos = pos + 1;
         op.chunkSize *= 2;
         if (pos <= minPos) {
-            return that.emit('error', 'Bad archive');
+            return that.emit('error', new Error('Bad archive'));
         }
         const expandLength = Math.min(op.chunkSize, pos - minPos);
         op.win.expandLeft(expandLength, readUntilFoundCallback);
@@ -320,7 +320,7 @@ const StreamZip = function (config) {
 
     function readEntriesCallback(err, bytesRead) {
         if (err || !bytesRead) {
-            return that.emit('error', err || 'Entries read error');
+            return that.emit('error', err || new Error('Entries read error'));
         }
         let bufferPos = op.pos - op.win.position;
         let entry = op.entry;
@@ -398,7 +398,7 @@ const StreamZip = function (config) {
                 } else if (entry.method === consts.DEFLATED) {
                     entryStream = entryStream.pipe(zlib.createInflateRaw());
                 } else {
-                    return callback('Unknown compression method: ' + entry.method);
+                    return callback(new Error('Unknown compression method: ' + entry.method));
                 }
                 if (canVerifyCrc(entry)) {
                     entryStream = entryStream.pipe(
@@ -453,14 +453,14 @@ const StreamZip = function (config) {
             checkEntriesExist();
             entry = entries[entry];
             if (!entry) {
-                return callback('Entry not found');
+                return callback(new Error('Entry not found'));
             }
         }
         if (!entry.isFile) {
-            return callback('Entry is not file');
+            return callback(new Error('Entry is not file'));
         }
         if (!fd) {
-            return callback('Archive closed');
+            return callback(new Error('Archive closed'));
         }
         const buffer = Buffer.alloc(consts.LOCHDR);
         new FsRead(fd, buffer, 0, buffer.length, entry.offset, (err) => {
@@ -471,7 +471,7 @@ const StreamZip = function (config) {
             try {
                 entry.readDataHeader(buffer);
                 if (entry.encrypted) {
-                    readEx = 'Entry encrypted';
+                    readEx = new Error('Entry encrypted');
                 }
             } catch (ex) {
                 readEx = ex;
@@ -664,6 +664,99 @@ StreamZip.debugLog = (...args) => {
 };
 
 util.inherits(StreamZip, events.EventEmitter);
+
+const propZip = Symbol('zip');
+
+StreamZip.async = class StreamZipAsync extends events.EventEmitter {
+    constructor(config) {
+        super();
+
+        const zip = new StreamZip(config);
+
+        zip.on('entry', (entry) => this.emit('entry', entry));
+        zip.on('extract', (entry, outPath) => this.emit('extract', entry, outPath));
+
+        this[propZip] = new Promise((resolve, reject) => {
+            zip.on('ready', () => {
+                zip.off('error', reject);
+                resolve(zip);
+            });
+            zip.on('error', reject);
+        });
+    }
+
+    get entriesCount() {
+        return this[propZip].then((zip) => zip.entriesCount);
+    }
+
+    get comment() {
+        return this[propZip].then((zip) => zip.comment);
+    }
+
+    async entry(name) {
+        const zip = await this[propZip];
+        return zip.entry(name);
+    }
+
+    async entries() {
+        const zip = await this[propZip];
+        return zip.entries();
+    }
+
+    async stream(entry) {
+        const zip = await this[propZip];
+        return new Promise((resolve, reject) => {
+            zip.stream(entry, (err, stm) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(stm);
+                }
+            });
+        });
+    }
+
+    async entryData(entry) {
+        const stm = await this.stream(entry);
+        return new Promise((resolve, reject) => {
+            const data = [];
+            stm.on('data', (chunk) => data.push(chunk));
+            stm.on('end', () => {
+                resolve(Buffer.concat(data));
+            });
+            stm.on('error', (err) => {
+                stm.removeAllListeners('end');
+                reject(err);
+            });
+        });
+    }
+
+    async extract(entry, outPath) {
+        const zip = await this[propZip];
+        return new Promise((resolve, reject) => {
+            zip.extract(entry, outPath, (err, res) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(res);
+                }
+            });
+        });
+    }
+
+    async close() {
+        const zip = await this[propZip];
+        return new Promise((resolve, reject) => {
+            zip.close((err) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
+        });
+    }
+};
 
 class CentralDirectoryHeader {
     read(data) {

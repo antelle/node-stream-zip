@@ -1,5 +1,9 @@
 Release notes
 -------------
+##### v1.13.0 (2021-05-05)
+`+` added simple Promise api available as StreamZip.async  
+`*` all methods now throw Error, not string  
+
 ##### v1.12.0 (2020-11-15)
 `+` added an option to pass fd instead of file name  
 
