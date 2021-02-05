@@ -34,6 +34,25 @@ const StreamZip = require('node-stream-zip');
 const zip = new StreamZip.async({ file: 'archive.zip' });
 ```
 
+Stream one entry to stdout
+```javascript
+const srm = await zip.stream('path/inside/zip.txt');
+stm.pipe(process.stdout);
+stm.on('end', () => zip.close());
+```
+
+Read a file as buffer
+```javascript
+const data = await zip.entryData('path/inside/zip.txt');
+await zip.close();
+```
+
+Extract one file to disk
+```javascript
+await zip.extract('path/inside/zip.txt', './extracted.txt');
+await zip.close();
+```
+
 List entries
 ```javascript
 const entriesCount = await zip.entriesCount;
@@ -49,19 +68,6 @@ for (const entry of Object.values(entries)) {
 await zip.close();
 ```
 
-Stream one entry to stdout
-```javascript
-const srm = await zip.stream('path/inside/zip.txt');
-stm.pipe(process.stdout);
-stm.on('end', () => zip.close());
-```
-
-Extract one file to disk
-```javascript
-await zip.extract('path/inside/zip.txt', './extracted.txt');
-await zip.close();
-```
-
 Extract a folder from archive to disk
 ```javascript
 fs.mkdirSync('extracted');
@@ -74,12 +80,6 @@ Extract everything
 fs.mkdirSync('extracted');
 const count = await zip.extract(null, './extracted');
 console.log(`Extracted ${count} entries`);
-await zip.close();
-```
-
-Read a file as buffer in sync way
-```javascript
-const data = await zip.entryData('path/inside/zip.txt');
 await zip.close();
 ```
 
