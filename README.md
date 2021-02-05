@@ -36,7 +36,7 @@ const zip = new StreamZip.async({ file: 'archive.zip' });
 
 Stream one entry to stdout
 ```javascript
-const srm = await zip.stream('path/inside/zip.txt');
+const stm = await zip.stream('path/inside/zip.txt');
 stm.pipe(process.stdout);
 stm.on('end', () => zip.close());
 ```
