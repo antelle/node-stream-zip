@@ -73,7 +73,7 @@ Extract a folder from archive to disk
 ```javascript
 fs.mkdirSync('extracted');
 await zip.extract('path/inside/zip/', './extracted');
-zip.close();
+await zip.close();
 ```
 
 Extract everything
