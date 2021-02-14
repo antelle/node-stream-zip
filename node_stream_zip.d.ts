@@ -140,6 +140,8 @@ declare class StreamZipAsync {
 
     on(event: 'entry', handler: (entry: ZipEntry) => void): void;
     on(event: 'extract', handler: (entry: ZipEntry, outPath: string) => void): void;
+
+    close(): Promise<void>;
 }
 
 declare class StreamZip {

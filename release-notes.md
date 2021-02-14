@@ -1,6 +1,9 @@
 Release notes
 -------------
-##### v1.13.0 (2021-05-05)
+##### v1.13.1 (2021-02-14)
+`-` added missing `close` definition  
+
+##### v1.13.0 (2021-02-05)
 `+` added simple Promise api available as StreamZip.async  
 `*` all methods now throw Error, not string  
 
