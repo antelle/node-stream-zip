@@ -1,5 +1,8 @@
 Release notes
 -------------
+##### v1.13.2 (2021-02-23)
+`-` fixed typings (entryData)  
+
 ##### v1.13.1 (2021-02-14)
 `-` added missing `close` definition  
 
