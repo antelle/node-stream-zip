@@ -133,7 +133,7 @@ declare class StreamZipAsync {
     comment: Promise<string>;
 
     entry(name: string): Promise<ZipEntry | undefined>;
-    entries(name: string): Promise<{ [name: string]: ZipEntry }>;
+    entries(): Promise<{ [name: string]: ZipEntry }>;
     entryData(entry: string | ZipEntry): Promise<Buffer>;
     stream(entry: string | ZipEntry): Promise<NodeJS.ReadableStream>;
     extract(entry: string | ZipEntry | null, outPath: string): Promise<number | undefined>;
