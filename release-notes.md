@@ -1,5 +1,8 @@
 Release notes
 -------------
+##### v1.13.3 (2021-04-01)
+`-` fixed typings (entry)
+
 ##### v1.13.2 (2021-02-23)
 `-` fixed typings (entryData)  
 
