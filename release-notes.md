@@ -1,5 +1,8 @@
 Release notes
 -------------
+##### v1.13.4 (2021-05-04)
+`+` funding link
+
 ##### v1.13.3 (2021-04-01)
 `-` fixed typings (entry)
 
