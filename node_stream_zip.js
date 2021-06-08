@@ -533,7 +533,7 @@ const StreamZip = function (config) {
         }
         let dir = dirs.shift();
         dir = path.join(baseDir, path.join(...dir));
-        fs.mkdir(dir, (err) => {
+        fs.mkdir(dir, { recursive: true }, (err) => {
             if (err && err.code !== 'EEXIST') {
                 return callback(err);
             }

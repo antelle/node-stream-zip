@@ -1,5 +1,8 @@
 Release notes
 -------------
+##### v1.13.5 (2021-06-08)
+`-` fix #77: using recursive mkdir for deeply nested archives  
+
 ##### v1.13.4 (2021-05-04)
 `+` funding link
 
