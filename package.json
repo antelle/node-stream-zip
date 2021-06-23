@@ -1,6 +1,6 @@
 {
   "name": "node-stream-zip",
-  "version": "1.13.5",
+  "version": "1.13.6",
   "description": "node.js library for reading and extraction of ZIP archives",
   "keywords": [
     "zip",
