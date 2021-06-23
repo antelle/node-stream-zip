@@ -678,7 +678,7 @@ StreamZip.async = class StreamZipAsync extends events.EventEmitter {
 
         this[propZip] = new Promise((resolve, reject) => {
             zip.on('ready', () => {
-                zip.off('error', reject);
+                zip.removeListener('error', reject);
                 resolve(zip);
             });
             zip.on('error', reject);
