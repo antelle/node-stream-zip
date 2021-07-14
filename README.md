@@ -214,7 +214,10 @@ npm test
 ## Known issues
 
 - [utf8](https://github.com/rubyzip/rubyzip/wiki/Files-with-non-ascii-filenames) file names
-- AES encrypted files
+
+## Out of scope
+
+- AES encrypted files: the library will throw an error if you try to open it
 
 ## Contributors
 
