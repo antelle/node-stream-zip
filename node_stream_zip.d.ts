@@ -121,28 +121,28 @@ declare namespace StreamZip {
          */
         offset: number;
     }
+
+    class StreamZipAsync {
+        constructor(config: StreamZipOptions);
+
+        entriesCount: Promise<number>;
+        comment: Promise<string>;
+
+        entry(name: string): Promise<ZipEntry | undefined>;
+        entries(): Promise<{ [name: string]: ZipEntry }>;
+        entryData(entry: string | ZipEntry): Promise<Buffer>;
+        stream(entry: string | ZipEntry): Promise<NodeJS.ReadableStream>;
+        extract(entry: string | ZipEntry | null, outPath: string): Promise<number | undefined>;
+
+        on(event: 'entry', handler: (entry: ZipEntry) => void): void;
+        on(event: 'extract', handler: (entry: ZipEntry, outPath: string) => void): void;
+
+        close(): Promise<void>;
+    }
 }
 
 type StreamZipOptions = StreamZip.StreamZipOptions;
 type ZipEntry = StreamZip.ZipEntry;
-
-declare class StreamZipAsync {
-    constructor(config: StreamZipOptions);
-
-    entriesCount: Promise<number>;
-    comment: Promise<string>;
-
-    entry(name: string): Promise<ZipEntry | undefined>;
-    entries(): Promise<{ [name: string]: ZipEntry }>;
-    entryData(entry: string | ZipEntry): Promise<Buffer>;
-    stream(entry: string | ZipEntry): Promise<NodeJS.ReadableStream>;
-    extract(entry: string | ZipEntry | null, outPath: string): Promise<number | undefined>;
-
-    on(event: 'entry', handler: (entry: ZipEntry) => void): void;
-    on(event: 'extract', handler: (entry: ZipEntry, outPath: string) => void): void;
-
-    close(): Promise<void>;
-}
 
 declare class StreamZip {
     constructor(config: StreamZipOptions);
@@ -187,7 +187,7 @@ declare class StreamZip {
 
     close(callback?: (err?: any) => void): void;
 
-    static async: typeof StreamZipAsync;
+    static async: typeof StreamZip.StreamZipAsync;
 }
 
 export = StreamZip;

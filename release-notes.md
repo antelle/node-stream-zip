@@ -1,5 +1,8 @@
 Release notes
 -------------
+##### v1.14.0 (2021-07-27)
+`+` exported StreamZipAsync type  
+
 ##### v1.13.6 (2021-06-23)
 `-` fixed compatibility with old node.js  
 
