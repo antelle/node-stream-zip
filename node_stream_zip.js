@@ -140,7 +140,8 @@ const StreamZip = function (config) {
     const ready = false,
         that = this,
         entries = config.storeEntries !== false ? {} : null,
-        fileName = config.file;
+        fileName = config.file,
+        textDecoder = config.nameEncoding ? new TextDecoder(config.nameEncoding) : null;
 
     open();
 
@@ -343,7 +344,7 @@ const StreamZip = function (config) {
                     op.move = true;
                     return;
                 }
-                entry.read(buffer, bufferPos);
+                entry.read(buffer, bufferPos, textDecoder);
                 if (!config.skipEntryNameValidation) {
                     entry.validateName();
                 }
@@ -877,8 +878,11 @@ class ZipEntry {
         this.extraLen = data.readUInt16LE(consts.LOCEXT);
     }
 
-    read(data, offset) {
-        this.name = data.slice(offset, (offset += this.fnameLen)).toString();
+    read(data, offset, textDecoder) {
+        const nameData = data.slice(offset, (offset += this.fnameLen));
+        this.name = textDecoder
+            ? textDecoder.decode(new Uint8Array(nameData))
+            : nameData.toString('utf8');
         const lastChar = data[offset - 1];
         this.isDirectory = lastChar === 47 || lastChar === 92;
 

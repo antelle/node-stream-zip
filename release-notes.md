@@ -1,5 +1,8 @@
 Release notes
 -------------
+##### v1.15.0 (2021-09-07)
+`+` added `nameEncoding` parameter  
+
 ##### v1.14.0 (2021-07-27)
 `+` exported StreamZipAsync type  
 

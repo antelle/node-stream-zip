@@ -33,6 +33,12 @@ declare namespace StreamZip {
          * @default automatic based on file size
          */
         chunkSize?: number;
+
+        /**
+         * Encoding used to decode file names
+         * @default UTF8
+         */
+        nameEncoding?: string;
     }
 
     interface ZipEntry {

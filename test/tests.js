@@ -6,6 +6,7 @@ let testPathTmp;
 let testNum = 0;
 const basePathTmp = 'test/.tmp/';
 const contentPath = 'test/content/';
+const alphabets = ['Latin', 'Ελληνικά', 'Русский', 'עִבְרִית', '日本語', '汉语'];
 
 function testFileOk(file, test) {
     let expEntriesCount = 10,
@@ -199,6 +200,53 @@ module.exports.ok['fd'] = function (test) {
     zip.on('ready', () => {
         const actualEentryData = zip.entryDataSync('BSDmakefile').toString('utf8');
         test.equal(actualEentryData.substr(0, 4), 'all:');
+        test.done();
+    });
+};
+
+module.exports.ok['encoding-utf8'] = function (test) {
+    test.expect(1);
+    const zip = new StreamZip({ file: 'test/special/utf8.zip' });
+    zip.on('ready', () => {
+        const names = Object.values(zip.entries())
+            .filter((e) => e.isFile)
+            .map((e) => e.name)
+            .sort();
+        const expectedNames = alphabets.map((a) => `${a}/${a}.txt`);
+        test.deepEqual(names, expectedNames);
+        test.done();
+    });
+};
+
+module.exports.ok['encoding-cp1252'] = function (test) {
+    test.expect(1);
+    const zip = new StreamZip({ file: 'test/special/utf8.zip', nameEncoding: 'cp1252' });
+    zip.on('ready', () => {
+        const names = Object.values(zip.entries())
+            .filter((e) => e.isFile)
+            .map((e) => e.name)
+            .sort();
+        const textEncoder = new TextEncoder('utf8');
+        const textDecoder = new TextDecoder('cp1252');
+        const expectedNames = alphabets
+            .map((a) => textDecoder.decode(textEncoder.encode(a)))
+            .map((a) => `${a}/${a}.txt`)
+            .sort();
+        test.deepEqual(names, expectedNames);
+        test.done();
+    });
+};
+
+module.exports.ok['utf8'] = function (test) {
+    test.expect(1);
+    const zip = new StreamZip({ fd: fs.openSync('test/special/utf8.zip', 'r') });
+    zip.on('ready', () => {
+        const names = Object.values(zip.entries())
+            .filter((e) => e.isFile)
+            .map((e) => e.name)
+            .sort();
+        const expectedNames = alphabets.map((a) => `${a}/${a}.txt`);
+        test.deepEqual(names, expectedNames);
         test.done();
     });
 };
