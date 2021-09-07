@@ -237,20 +237,6 @@ module.exports.ok['encoding-cp1252'] = function (test) {
     });
 };
 
-module.exports.ok['utf8'] = function (test) {
-    test.expect(1);
-    const zip = new StreamZip({ fd: fs.openSync('test/special/utf8.zip', 'r') });
-    zip.on('ready', () => {
-        const names = Object.values(zip.entries())
-            .filter((e) => e.isFile)
-            .map((e) => e.name)
-            .sort();
-        const expectedNames = alphabets.map((a) => `${a}/${a}.txt`);
-        test.deepEqual(names, expectedNames);
-        test.done();
-    });
-};
-
 module.exports.error = {};
 module.exports.error['enc_aes.zip'] = function (test) {
     test.expect(1);
