@@ -195,6 +195,7 @@ zip.on('entry', entry => {
 You can pass these options to the constructor
 - `storeEntries: true` - you will be able to work with entries inside zip archive, otherwise the only way to access them is `entry` event
 - `skipEntryNameValidation: true` - by default, entry name is checked for malicious characters, like `../` or `c:\123`, pass this flag to disable validation errors
+- `nameEncoding: 'utf8'` - encoding used to decode file names, UTF8 by default
 
 ## Methods
 
