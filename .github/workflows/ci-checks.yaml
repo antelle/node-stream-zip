@@ -19,9 +19,9 @@ jobs:
         run: npm run check-types
       - name: Run tests
         run: npm test
-      - name: Setup Node.js 12
+      - name: Setup Node.js 14
         uses: actions/setup-node@v2
         with:
-          node-version: '12'
-      - name: Run tests on Node.js 12
+          node-version: '14'
+      - name: Run tests on Node.js 14
         run: npm test
