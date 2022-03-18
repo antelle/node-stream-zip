@@ -4,6 +4,8 @@
  */
 
 let fs = require('fs');
+const https = require('https');
+const http = require('http');
 const util = require('util');
 const path = require('path');
 const events = require('events');
@@ -136,7 +138,7 @@ const consts = {
 };
 
 const StreamZip = function (config) {
-    let fd, fileSize, chunkSize, op, centralDirectory, closed;
+    let fd, fileSize, chunkSize, op, centralDirectory, closed, url;
     const ready = false,
         that = this,
         entries = config.storeEntries !== false ? {} : null,
@@ -146,7 +148,13 @@ const StreamZip = function (config) {
     open();
 
     function open() {
-        if (config.fd) {
+        if(config.url) {
+            url = new URL(config.url);
+            if(!['http:', 'https:'].includes(url.protocol)) {
+                throw new Error('Url should be http or https')
+            }
+            readFile();
+        } else if (config.fd) {
             fd = config.fd;
             readFile();
         } else {
@@ -161,18 +169,31 @@ const StreamZip = function (config) {
     }
 
     function readFile() {
-        fs.fstat(fd, (err, stat) => {
-            if (err) {
-                return that.emit('error', err);
-            }
-            fileSize = stat.size;
-            chunkSize = config.chunkSize || Math.round(fileSize / 1000);
-            chunkSize = Math.max(
-                Math.min(chunkSize, Math.min(128 * 1024, fileSize)),
-                Math.min(1024, fileSize)
-            );
-            readCentralDirectory();
-        });
+        if(url){
+            const req = selectUrlLib(url).request(url, {method: 'HEAD'}, (res) => {
+                fileSize = parseInt(res.headers['content-length'], 10)
+                chunkSize = config.chunkSize || Math.round(fileSize / 1000);
+                chunkSize = Math.max(
+                    Math.min(chunkSize, Math.min(128 * 1024, fileSize)),
+                    Math.min(1024, fileSize)
+                );
+                readCentralDirectory();
+            })
+            req.end()
+        } else {
+            fs.fstat(fd, (err, stat) => {
+                if (err) {
+                    return that.emit('error', err);
+                }
+                fileSize = stat.size;
+                chunkSize = config.chunkSize || Math.round(fileSize / 1000);
+                chunkSize = Math.max(
+                    Math.min(chunkSize, Math.min(128 * 1024, fileSize)),
+                    Math.min(1024, fileSize)
+                );
+                readCentralDirectory();
+            });
+        }
     }
 
     function readUntilFoundCallback(err, bytesRead) {
@@ -209,7 +230,7 @@ const StreamZip = function (config) {
     function readCentralDirectory() {
         const totalReadLength = Math.min(consts.ENDHDR + consts.MAXFILECOMMENT, fileSize);
         op = {
-            win: new FileWindowBuffer(fd),
+            win: url ? new UrlWindowBuffer(url) : new FileWindowBuffer(fd),
             totalReadLength,
             minPos: fileSize - totalReadLength,
             lastPos: fileSize,
@@ -311,7 +332,7 @@ const StreamZip = function (config) {
 
     function readEntries() {
         op = {
-            win: new FileWindowBuffer(fd),
+            win: url ? new UrlWindowBuffer(url) : new FileWindowBuffer(fd),
             pos: centralDirectory.offset,
             chunkSize,
             entriesLeft: centralDirectory.volumeEntries,
@@ -393,20 +414,29 @@ const StreamZip = function (config) {
                     return callback(err);
                 }
                 const offset = dataOffset(entry);
-                let entryStream = new EntryDataReaderStream(fd, offset, entry.compressedSize);
-                if (entry.method === consts.STORED) {
-                    // nothing to do
-                } else if (entry.method === consts.DEFLATED) {
-                    entryStream = entryStream.pipe(zlib.createInflateRaw());
+                let entryStream
+                if(url){
+                    const req = selectUrlLib(url).get(url, {headers: {
+                        'Range': `bytes=${offset}-${offset + entry.compressedSize - 1}`
+                    }}, (res) => {
+                        if(res.statusCode !== 206){
+                            callback(new Error(`${url} server doesn't support Range header`))
+                        }
+                        try {
+                            callback(null, extraEntryStreamAction(entry, res))
+                        } catch(err) {
+                            callback(err)
+                        }
+                    })
+                    req.end()
                 } else {
-                    return callback(new Error('Unknown compression method: ' + entry.method));
+                    entryStream = new EntryDataReaderStream(fd, offset, entry.compressedSize);
+                    try {
+                        callback(null, extraEntryStreamAction(entry, entryStream))
+                    } catch(err) {
+                        callback(err)
+                    }
                 }
-                if (canVerifyCrc(entry)) {
-                    entryStream = entryStream.pipe(
-                        new EntryVerifyStream(entryStream, entry.crc, entry.size)
-                    );
-                }
-                callback(null, entryStream);
             },
             false
         );
@@ -460,25 +490,46 @@ const StreamZip = function (config) {
         if (!entry.isFile) {
             return callback(new Error('Entry is not file'));
         }
-        if (!fd) {
+        if (!fd && !url) {
             return callback(new Error('Archive closed'));
         }
+        if (url && sync) {
+            return callback(new Error('Can\'t do sync on url'));
+        }
         const buffer = Buffer.alloc(consts.LOCHDR);
-        new FsRead(fd, buffer, 0, buffer.length, entry.offset, (err) => {
-            if (err) {
-                return callback(err);
-            }
-            let readEx;
-            try {
-                entry.readDataHeader(buffer);
-                if (entry.encrypted) {
-                    readEx = new Error('Entry encrypted');
+        if(url){
+            new UrlRead(url, buffer, 0, buffer.length, entry.offset, (err) => {
+                if (err) {
+                    return callback(err);
                 }
-            } catch (ex) {
-                readEx = ex;
-            }
-            callback(readEx, entry);
-        }).read(sync);
+                let readEx;
+                try {
+                    entry.readDataHeader(buffer);
+                    if (entry.encrypted) {
+                        readEx = new Error('Entry encrypted');
+                    }
+                } catch (ex) {
+                    readEx = ex;
+                }
+                callback(readEx, entry);
+            }).read();
+        } else {
+            new FsRead(fd, buffer, 0, buffer.length, entry.offset, (err) => {
+                if (err) {
+                    return callback(err);
+                }
+                let readEx;
+                try {
+                    entry.readDataHeader(buffer);
+                    if (entry.encrypted) {
+                        readEx = new Error('Entry encrypted');
+                    }
+                } catch (ex) {
+                    readEx = ex;
+                }
+                callback(readEx, entry);
+            }).read(sync);
+        }
     };
 
     function dataOffset(entry) {
@@ -489,6 +540,23 @@ const StreamZip = function (config) {
         // if bit 3 (0x08) of the general-purpose flags field is set, then the CRC-32 and file sizes are not known when the header is written
         return (entry.flags & 0x8) !== 0x8;
     }
+
+    function extraEntryStreamAction(entry, entryStream) {
+        if (entry.method === consts.STORED) {
+            // nothing to do
+        } else if (entry.method === consts.DEFLATED) {
+            entryStream = entryStream.pipe(zlib.createInflateRaw());
+        } else {
+            throw new Error('Unknown compression method: ' + entry.method);
+        }
+        if (canVerifyCrc(entry)) {
+            return entryStream.pipe(
+                new EntryVerifyStream(entryStream, entry.crc, entry.size)
+            );
+        }
+        return entryStream
+    }
+
 
     function extract(entry, outPath, callback) {
         that.stream(entry, (err, stm) => {
@@ -945,6 +1013,56 @@ class ZipEntry {
     }
 }
 
+class UrlRead {
+    constructor(url, buffer, offset, length, position, callback) {
+        this.url = url;
+        this.buffer = buffer;
+        this.offset = offset;
+        this.length = length;
+        this.position = position;
+        this.callback = callback;
+        this.bytesRead = 0;
+        this.waiting = false;
+    }
+
+    read() {
+        StreamZip.debugLog('read', this.position, this.bytesRead, this.length, this.offset);
+        this.waiting = true;
+        const req = selectUrlLib(this.url).get(this.url, {headers: {
+            'Range': `bytes=${this.position + this.bytesRead}-${this.position + this.length}`
+        }}, (res) => {
+            const chunks = []
+            if(res.statusCode !== 206){
+                throw new Error(`${this.url} server doesn't support Range header`)
+            }
+            res.on('data', (chunk) => {
+                chunks.push(chunk)
+            })
+            res.on('end', () => {
+                const data = Buffer.concat(chunks);
+                data.copy(this.buffer, this.offset + this.bytesRead)
+                this.readCallback(null, data.length - 1);
+            })
+            res.on('error', (err) => {
+                this.readCallback(err, null);
+            })
+        })
+        req.end();
+    }
+
+    readCallback(err, bytesRead) {
+        if (typeof bytesRead === 'number') {
+            this.bytesRead += bytesRead;
+        }
+        if (err || !bytesRead || this.bytesRead === this.length) {
+            this.waiting = false;
+            return this.callback(err, this.bytesRead);
+        } else {
+            this.read();
+        }
+    }
+}
+
 class FsRead {
     constructor(fd, buffer, offset, length, position, callback) {
         this.fd = fd;
@@ -997,6 +1115,72 @@ class FsRead {
         } else {
             this.read(sync);
         }
+    }
+}
+
+class UrlWindowBuffer {
+    constructor(url) {
+        this.position = 0;
+        this.buffer = Buffer.alloc(0);
+        this.url = url;
+        this.urlOp = null;
+    }
+
+    checkOp() {
+        if (this.urlOp && this.urlOp.waiting) {
+            throw new Error('Operation in progress');
+        }
+    }
+
+    read(pos, length, callback) {
+        this.checkOp();
+        if (this.buffer.length < length) {
+            this.buffer = Buffer.alloc(length);
+        }
+        this.position = pos;
+        this.urlOp = new UrlRead(this.url, this.buffer, 0, length, this.position, callback).read();
+    }
+
+    expandLeft(length, callback) {
+        this.checkOp();
+        this.buffer = Buffer.concat([Buffer.alloc(length), this.buffer]);
+        this.position -= length;
+        if (this.position < 0) {
+            this.position = 0;
+        }
+        this.urlOp = new UrlRead(this.url, this.buffer, 0, length, this.position, callback).read();
+    }
+
+    expandRight(length, callback) {
+        this.checkOp();
+        const offset = this.buffer.length;
+        this.buffer = Buffer.concat([this.buffer, Buffer.alloc(length)]);
+        this.urlOp = new UrlRead(
+            this.url,
+            this.buffer,
+            offset,
+            length,
+            this.position + offset,
+            callback
+        ).read();
+    }
+
+    moveRight(length, callback, shift) {
+        this.checkOp();
+        if (shift) {
+            this.buffer.copy(this.buffer, 0, shift);
+        } else {
+            shift = 0;
+        }
+        this.position += shift;
+        this.urlOp = new UrlRead(
+            this.url,
+            this.buffer,
+            this.buffer.length - shift,
+            shift,
+            this.position + this.buffer.length - shift,
+            callback
+        ).read();
     }
 }
 
@@ -1177,6 +1361,10 @@ class CrcVerify {
         }
         return crcTable;
     }
+}
+
+function selectUrlLib(url) {
+    return url.protocol === 'https:' ? https : http
 }
 
 function parseZipTime(timebytes, datebytes) {
