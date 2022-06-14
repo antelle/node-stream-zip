@@ -194,6 +194,8 @@ declare class StreamZip {
     close(callback?: (err?: any) => void): void;
 
     static async: typeof StreamZip.StreamZipAsync;
+    
+    static setFs(fsLike: any): void;
 }
 
 export = StreamZip;
