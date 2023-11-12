@@ -130,6 +130,7 @@ const consts = {
     ID_IBM1: 0x0065,
     ID_IBM2: 0x0066,
     ID_POSZIP: 0x4690,
+    ID_UNICODE_PATH: 0x7075,
 
     EF_ZIP64_OR_32: 0xffffffff,
     EF_ZIP64_OR_16: 0xffff,
@@ -910,9 +911,23 @@ class ZipEntry {
             if (consts.ID_ZIP64 === signature) {
                 this.parseZip64Extra(data, offset, size);
             }
+            if (consts.ID_UNICODE_PATH === signature) {
+                this.parseUnicodeFileName(data, offset, size);
+            }            
             offset += size;
         }
     }
+
+    parseUnicodeFileName(data, offset, length) {
+        readUInt8(data, offset) // version
+        offset += 1
+        length -= 1
+        var nameCRC32 = readUInt32LE(data, offset)
+        offset += 4
+        length -= 4
+        const nameData = data.slice(offset, (offset += length));
+        this.name = nameData.toString('utf-8')
+    }    
 
     parseZip64Extra(data, offset, length) {
         if (length >= 8 && this.size === consts.EF_ZIP64_OR_32) {
@@ -1205,6 +1220,14 @@ function toBits(dec, size) {
 
 function readUInt64LE(buffer, offset) {
     return buffer.readUInt32LE(offset + 4) * 0x0000000100000000 + buffer.readUInt32LE(offset);
+}
+
+function readUInt32LE(buffer, offset) {
+    return buffer.readUInt32LE(offset);
+}
+
+function readUInt8(buffer, offset) {
+    return buffer.readUInt8(offset)
 }
 
 module.exports = StreamZip;
