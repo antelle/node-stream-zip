@@ -15,6 +15,13 @@ declare namespace StreamZip {
         fd?: number;
 
         /**
+         * http(s) url to stream from
+         * The server should support HEAD request returning content-length and Range header
+         * @default undefined
+         */
+         url?: string;
+
+        /**
          * You will be able to work with entries inside zip archive,
          * otherwise the only way to access them is entry event
          * @default true

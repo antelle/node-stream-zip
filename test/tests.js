@@ -1,4 +1,6 @@
 const fs = require('fs');
+const http = require('http')
+const send = require('send')
 const path = require('path');
 const StreamZip = require('../node_stream_zip.js');
 
@@ -204,6 +206,31 @@ module.exports.ok['fd'] = function (test) {
     });
 };
 
+module.exports.ok['url'] = function (test) {
+    const server = http.createServer((req, res) => {
+        send(req, 'test/ok/normal.zip').pipe(res)
+    })
+
+    server.listen(8000)
+    const zip = new StreamZip({ url: 'http://127.0.0.1:8000/normal.zip' });
+    zip.on('ready', () => {
+        const entries = zip.entries();
+        const entry = entries['doc/changelog-foot.html'];
+        test.ok(entry);
+        const entryBeforeOpen = Object.assign({}, entry);
+        zip.openEntry(
+            entry,
+            (err, entryAfterOpen) => {
+                test.equal(err, undefined);
+                test.notDeepEqual(entryBeforeOpen, entryAfterOpen);
+                test.done();
+                server.close()
+            },
+            false
+        );
+    });
+};
+
 module.exports.ok['encoding-utf8'] = function (test) {
     test.expect(1);
     const zip = new StreamZip({ file: 'test/special/utf8.zip' });
@@ -393,6 +420,31 @@ module.exports.parallel['streaming 100 files'] = function (test) {
             });
         }
     });
+};
+
+module.exports.parallel['streaming 100 files from url'] = async function (test) {
+    const num = 100;
+    const server = http.createServer((req, res) => {
+        send(req, 'test/ok/normal.zip').pipe(res)
+    })
+
+    server.listen(8000)
+    const zip = new StreamZip.async({ url: 'http://127.0.0.1:8000/normal.zip' });
+    let extracted = 0;
+    const files = [
+        'doc/changelog-foot.html',
+        'doc/sh_javascript.min.js',
+        'BSDmakefile',
+        'README.md',
+    ];
+    for (let i = 0; i < num; i++) {
+        const file = files[Math.floor(Math.random() * files.length)];
+        await zip.extract(file, testPathTmp + i)
+        if (++extracted === num) {
+            test.done();
+            server.close()
+        }
+    }
 };
 
 module.exports['callback exception'] = function (test) {
