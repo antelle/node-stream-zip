@@ -1,5 +1,8 @@
 Release notes
 -------------
+##### v1.16.0 (2026-07-22)
+`+` fixed reading compressed entry size to prevent exploitation  
+
 ##### v1.15.0 (2021-09-07)
 `+` added `nameEncoding` parameter  
 

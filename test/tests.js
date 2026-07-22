@@ -372,6 +372,42 @@ module.exports.error['deflate64.zip'] = function (test) {
     });
 };
 
+module.exports.error['mismatched local header sizes'] = function (test) {
+    test.expect(2);
+    const file = testPathTmp + 'mismatched-local-header-sizes.zip';
+    const name = Buffer.from('a');
+    const localHeader = Buffer.alloc(30);
+    localHeader.writeUInt32LE(0x04034b50, 0);
+    localHeader.writeUInt16LE(20, 4);
+    localHeader.writeUInt32LE(8 * 1024 * 1024, 18);
+    localHeader.writeUInt32LE(8 * 1024 * 1024, 22);
+    localHeader.writeUInt16LE(name.length, 26);
+
+    const centralHeader = Buffer.alloc(46);
+    centralHeader.writeUInt32LE(0x02014b50, 0);
+    centralHeader.writeUInt16LE(20, 4);
+    centralHeader.writeUInt16LE(20, 6);
+    centralHeader.writeUInt16LE(name.length, 28);
+
+    const centralDirectoryOffset = localHeader.length + name.length;
+    const centralDirectorySize = centralHeader.length + name.length;
+    const endHeader = Buffer.alloc(22);
+    endHeader.writeUInt32LE(0x06054b50, 0);
+    endHeader.writeUInt16LE(1, 8);
+    endHeader.writeUInt16LE(1, 10);
+    endHeader.writeUInt32LE(centralDirectorySize, 12);
+    endHeader.writeUInt32LE(centralDirectoryOffset, 16);
+
+    fs.writeFileSync(file, Buffer.concat([localHeader, name, centralHeader, name, endHeader]));
+    const zip = new StreamZip({ file });
+    zip.on('ready', () => {
+        const entry = zip.entry('a');
+        test.throws(() => zip.entryDataSync(entry), /Invalid compressed size/);
+        test.equal(entry.compressedSize, 0, 'central-directory size must remain authoritative');
+        test.done();
+    });
+};
+
 module.exports.parallel = {};
 module.exports.parallel['streaming 100 files'] = function (test) {
     const num = 100;

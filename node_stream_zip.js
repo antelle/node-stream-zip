@@ -864,13 +864,17 @@ class ZipEntry {
         this.crc = data.readUInt32LE(consts.LOCCRC) || this.crc;
         // compressed size
         const compressedSize = data.readUInt32LE(consts.LOCSIZ);
-        if (compressedSize && compressedSize !== consts.EF_ZIP64_OR_32) {
-            this.compressedSize = compressedSize;
+        if (
+            compressedSize &&
+            compressedSize !== consts.EF_ZIP64_OR_32 &&
+            compressedSize !== this.compressedSize
+        ) {
+            throw new Error('Invalid compressed size');
         }
         // uncompressed size
         const size = data.readUInt32LE(consts.LOCLEN);
-        if (size && size !== consts.EF_ZIP64_OR_32) {
-            this.size = size;
+        if (size && size !== consts.EF_ZIP64_OR_32 && size !== this.size) {
+            throw new Error('Invalid size');
         }
         // filename length
         this.fnameLen = data.readUInt16LE(consts.LOCNAM);
