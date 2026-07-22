@@ -4,3 +4,4 @@ node_modules/
 build/
 resources/lib
 *.log
+.tmp

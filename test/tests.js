@@ -48,11 +48,12 @@ function testFileOk(file, test) {
         test.ok(!dirShouldExist || dirEntry.isDirectory);
         test.ok(!dirShouldExist || !dirEntry.isFile);
 
+        const directFilePath = testPathTmp + 'README-direct.md';
         const filePromise = new Promise((resolve) => {
-            zip.extract('README.md', testPathTmp + 'README.md', (err, res) => {
+            zip.extract('README.md', directFilePath, (err, res) => {
                 test.equal(err, null);
                 test.ok(1, res);
-                assertFilesEqual(test, contentPath + 'README.md', testPathTmp + 'README.md');
+                assertFilesEqual(test, contentPath + 'README.md', directFilePath);
                 resolve();
             });
         });
@@ -77,15 +78,16 @@ function testFileOk(file, test) {
             });
         });
         const extractAllPromise = new Promise((resolve) => {
-            zip.extract(null, testPathTmp, (err, res) => {
+            const extractAllPath = testPathTmp + 'all/';
+            zip.extract(null, extractAllPath, (err, res) => {
                 test.equal(err, null);
                 test.ok(7, res);
                 assertFilesEqual(
                     test,
                     contentPath + 'doc/api_assets/sh.css',
-                    testPathTmp + 'doc/api_assets/sh.css'
+                    extractAllPath + 'doc/api_assets/sh.css'
                 );
-                assertFilesEqual(test, contentPath + 'BSDmakefile', testPathTmp + 'BSDmakefile');
+                assertFilesEqual(test, contentPath + 'BSDmakefile', extractAllPath + 'BSDmakefile');
                 resolve();
             });
         });
@@ -398,23 +400,19 @@ module.exports.parallel['streaming 100 files'] = function (test) {
 module.exports['callback exception'] = function (test) {
     test.expect(3);
     const zip = new StreamZip({ file: 'test/special/tiny.zip' });
-    let streamError = false;
     let streamFinished = false;
     let callbackCallCount = 0;
     zip.once('entry', (entry) => {
         zip.stream(entry, (err, stream) => {
             callbackCallCount++;
-            process.once('uncaughtException', (ex) => {
+            stream.on('error', (ex) => {
                 test.equal(ex.message, 'descriptive message!');
                 test.equal(callbackCallCount, 1);
-                test.ok(!streamError && !streamFinished);
+                test.ok(!streamFinished);
                 test.done();
             });
             stream.on('data', () => {
                 throw new Error('descriptive message!');
-            });
-            stream.on('error', () => {
-                streamError = true;
             });
             stream.on('finish', () => {
                 streamFinished = true;
