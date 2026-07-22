@@ -131,14 +131,14 @@ function rmdirSync(dir) {
         } else {
             try {
                 fs.unlinkSync(filename);
-            } catch (e) {
+            } catch {
                 // don't care
             }
         }
     }
     try {
         fs.rmdirSync(dir);
-    } catch (e) {
+    } catch {
         // booo
     }
 }
