@@ -1,7 +1,7 @@
 Release notes
 -------------
 ##### v1.16.0 (2026-07-22)
-`+` fixed reading compressed entry size to prevent exploitation  
+`+` fixed reading compressed entry size to prevent exploitation reported by @DumDumSu  
 `*` updated dependencies  
 
 ##### v1.15.0 (2021-09-07)

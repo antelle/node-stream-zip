@@ -223,3 +223,6 @@ npm test
 ## Contributors
 
 ZIP parsing code has been partially forked from [cthackers/adm-zip](https://github.com/cthackers/adm-zip) (MIT license).
+
+Thanks for responsible vulnerabilty disclosure to:  
+- @DumDumSu: specially crafted ZIP archives could lead to memory overflow, patched in [v1.16.0](release-notes.md#v1160-2026-07-22)
