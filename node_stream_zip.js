@@ -2,14 +2,12 @@
  * @license node-stream-zip | (c) 2020 Antelle | https://github.com/antelle/node-stream-zip/blob/master/LICENSE
  * Portions copyright https://github.com/cthackers/adm-zip | https://raw.githubusercontent.com/cthackers/adm-zip/master/LICENSE
  */
-
 let fs = require('fs');
 const util = require('util');
 const path = require('path');
 const events = require('events');
 const zlib = require('zlib');
 const stream = require('stream');
-
 const consts = {
     /* The local file header */
     LOCHDR: 30, // LOC header size
@@ -23,14 +21,12 @@ const consts = {
     LOCLEN: 22, // uncompressed size
     LOCNAM: 26, // filename length
     LOCEXT: 28, // extra field length
-
     /* The Data descriptor */
     EXTSIG: 0x08074b50, // "PK\007\008"
     EXTHDR: 16, // EXT header size
     EXTCRC: 4, // uncompressed file crc-32 value
     EXTSIZ: 8, // compressed size
     EXTLEN: 12, // uncompressed size
-
     /* The central directory file header */
     CENHDR: 46, // CEN header size
     CENSIG: 0x02014b50, // "PK\001\002"
@@ -49,7 +45,6 @@ const consts = {
     CENATT: 36, // internal file attributes
     CENATX: 38, // external file attributes (host system dependent)
     CENOFF: 42, // LOC header offset
-
     /* The entries in the end of central directory */
     ENDHDR: 22, // END header size
     ENDSIG: 0x06054b50, // "PK\005\006"
@@ -60,13 +55,11 @@ const consts = {
     ENDOFF: 16, // offset of first CEN header
     ENDCOM: 20, // zip file comment length
     MAXFILECOMMENT: 0xffff,
-
     /* The entries in the end of ZIP64 central directory locator */
     ENDL64HDR: 20, // ZIP64 end of central directory locator header size
     ENDL64SIG: 0x07064b50, // ZIP64 end of central directory locator signature
     ENDL64SIGFIRST: 0x50,
     ENDL64OFS: 8, // ZIP64 end of central directory offset
-
     /* The entries in the end of ZIP64 central directory */
     END64HDR: 56, // ZIP64 end of central directory header size
     END64SIG: 0x06064b50, // ZIP64 end of central directory signature
@@ -75,7 +68,6 @@ const consts = {
     END64TOT: 32, // total number of entries
     END64SIZ: 40,
     END64OFF: 48,
-
     /* Compression methods */
     STORED: 0, // no compression
     SHRUNK: 1, // shrunk
@@ -95,7 +87,6 @@ const consts = {
     // 15-17 reserved
     IBM_TERSE: 18, // compressed using IBM TERSE
     IBM_LZ77: 19, //IBM LZ77 z
-
     /* General purpose bit flag */
     FLG_ENC: 0, // encrypted file
     FLG_COMP1: 1, // compression option
@@ -106,11 +97,9 @@ const consts = {
     FLG_LNG: 1024, // language encoding
     FLG_MSK: 4096, // mask header values
     FLG_ENTRY_ENC: 1,
-
     /* 4.5 Extensible data fields */
     EF_ID: 0,
     EF_SIZE: 2,
-
     /* Header IDs */
     ID_ZIP64: 0x0001,
     ID_AVINFO: 0x0007,
@@ -130,11 +119,28 @@ const consts = {
     ID_IBM1: 0x0065,
     ID_IBM2: 0x0066,
     ID_POSZIP: 0x4690,
+    ID_UNICODE_PATH: 0x7075,
 
     EF_ZIP64_OR_32: 0xffffffff,
     EF_ZIP64_OR_16: 0xffff,
-};
 
+    
+          
+            
+    
+
+          
+          Expand Down
+          
+            
+    
+
+          
+          Expand Up
+    
+    @@ -910,10 +911,24 @@ class ZipEntry {
+  
+};
 const StreamZip = function (config) {
     let fd, fileSize, chunkSize, op, centralDirectory, closed;
     const ready = false,
@@ -142,9 +148,7 @@ const StreamZip = function (config) {
         entries = config.storeEntries !== false ? {} : null,
         fileName = config.file,
         textDecoder = config.nameEncoding ? new TextDecoder(config.nameEncoding) : null;
-
     open();
-
     function open() {
         if (config.fd) {
             fd = config.fd;
@@ -159,7 +163,6 @@ const StreamZip = function (config) {
             });
         }
     }
-
     function readFile() {
         fs.fstat(fd, (err, stat) => {
             if (err) {
@@ -174,7 +177,6 @@ const StreamZip = function (config) {
             readCentralDirectory();
         });
     }
-
     function readUntilFoundCallback(err, bytesRead) {
         if (err || !bytesRead) {
             return that.emit('error', err || new Error('Archive read error'));
@@ -205,7 +207,6 @@ const StreamZip = function (config) {
         const expandLength = Math.min(op.chunkSize, pos - minPos);
         op.win.expandLeft(expandLength, readUntilFoundCallback);
     }
-
     function readCentralDirectory() {
         const totalReadLength = Math.min(consts.ENDHDR + consts.MAXFILECOMMENT, fileSize);
         op = {
@@ -220,7 +221,6 @@ const StreamZip = function (config) {
         };
         op.win.read(fileSize - op.chunkSize, op.chunkSize, readUntilFoundCallback);
     }
-
     function readCentralDirectoryComplete() {
         const buffer = op.win.buffer;
         const pos = op.lastBufferPosition;
@@ -255,7 +255,6 @@ const StreamZip = function (config) {
             that.emit('error', err);
         }
     }
-
     function readZip64CentralDirectoryLocator() {
         const length = consts.ENDL64HDR;
         if (op.lastBufferPosition > length) {
@@ -275,7 +274,6 @@ const StreamZip = function (config) {
             op.win.read(op.lastPos - op.chunkSize, op.chunkSize, readUntilFoundCallback);
         }
     }
-
     function readZip64CentralDirectoryLocatorComplete() {
         const buffer = op.win.buffer;
         const locHeader = new CentralDirectoryLoc64Header();
@@ -295,7 +293,6 @@ const StreamZip = function (config) {
         };
         op.win.read(fileSize - op.chunkSize, op.chunkSize, readUntilFoundCallback);
     }
-
     function readZip64CentralDirectoryComplete() {
         const buffer = op.win.buffer;
         const zip64cd = new CentralDirectoryZip64Header();
@@ -308,7 +305,6 @@ const StreamZip = function (config) {
         op = {};
         readEntries();
     }
-
     function readEntries() {
         op = {
             win: new FileWindowBuffer(fd),
@@ -318,7 +314,6 @@ const StreamZip = function (config) {
         };
         op.win.read(op.pos, Math.min(chunkSize, fileSize - op.pos), readEntriesCallback);
     }
-
     function readEntriesCallback(err, bytesRead) {
         if (err || !bytesRead) {
             return that.emit('error', err || new Error('Entries read error'));
@@ -362,29 +357,24 @@ const StreamZip = function (config) {
             that.emit('error', err);
         }
     }
-
     function checkEntriesExist() {
         if (!entries) {
             throw new Error('storeEntries disabled');
         }
     }
-
     Object.defineProperty(this, 'ready', {
         get() {
             return ready;
         },
     });
-
     this.entry = function (name) {
         checkEntriesExist();
         return entries[name];
     };
-
     this.entries = function () {
         checkEntriesExist();
         return entries;
     };
-
     this.stream = function (entry, callback) {
         return this.openEntry(
             entry,
@@ -411,7 +401,6 @@ const StreamZip = function (config) {
             false
         );
     };
-
     this.entryDataSync = function (entry) {
         let err = null;
         this.openEntry(
@@ -448,7 +437,6 @@ const StreamZip = function (config) {
         }
         return data;
     };
-
     this.openEntry = function (entry, callback, sync) {
         if (typeof entry === 'string') {
             checkEntriesExist();
@@ -480,16 +468,13 @@ const StreamZip = function (config) {
             callback(readEx, entry);
         }).read(sync);
     };
-
     function dataOffset(entry) {
         return entry.offset + consts.LOCHDR + entry.fnameLen + entry.extraLen;
     }
-
     function canVerifyCrc(entry) {
         // if bit 3 (0x08) of the general-purpose flags field is set, then the CRC-32 and file sizes are not known when the header is written
         return (entry.flags & 0x8) !== 0x8;
     }
-
     function extract(entry, outPath, callback) {
         that.stream(entry, (err, stm) => {
             if (err) {
@@ -527,7 +512,6 @@ const StreamZip = function (config) {
             }
         });
     }
-
     function createDirectories(baseDir, dirs, callback) {
         if (!dirs.length) {
             return callback();
@@ -541,7 +525,6 @@ const StreamZip = function (config) {
             createDirectories(baseDir, dirs, callback);
         });
     }
-
     function extractFiles(baseDir, baseRelPath, files, callback, extractedCount) {
         if (!files.length) {
             return callback(null, extractedCount);
@@ -555,7 +538,6 @@ const StreamZip = function (config) {
             extractFiles(baseDir, baseRelPath, files, callback, extractedCount + 1);
         });
     }
-
     this.extract = function (entry, outPath, callback) {
         let entryName = entry || '';
         if (typeof entry === 'string') {
@@ -627,7 +609,6 @@ const StreamZip = function (config) {
             });
         }
     };
-
     this.close = function (callback) {
         if (closed || !fd) {
             closed = true;
@@ -644,7 +625,6 @@ const StreamZip = function (config) {
             });
         }
     };
-
     const originalEmit = events.EventEmitter.prototype.emit;
     this.emit = function (...args) {
         if (!closed) {
@@ -652,31 +632,23 @@ const StreamZip = function (config) {
         }
     };
 };
-
 StreamZip.setFs = function (customFs) {
     fs = customFs;
 };
-
 StreamZip.debugLog = (...args) => {
     if (StreamZip.debug) {
         // eslint-disable-next-line no-console
         console.log(...args);
     }
 };
-
 util.inherits(StreamZip, events.EventEmitter);
-
 const propZip = Symbol('zip');
-
 StreamZip.async = class StreamZipAsync extends events.EventEmitter {
     constructor(config) {
         super();
-
         const zip = new StreamZip(config);
-
         zip.on('entry', (entry) => this.emit('entry', entry));
         zip.on('extract', (entry, outPath) => this.emit('extract', entry, outPath));
-
         this[propZip] = new Promise((resolve, reject) => {
             zip.on('ready', () => {
                 zip.removeListener('error', reject);
@@ -685,25 +657,20 @@ StreamZip.async = class StreamZipAsync extends events.EventEmitter {
             zip.on('error', reject);
         });
     }
-
     get entriesCount() {
         return this[propZip].then((zip) => zip.entriesCount);
     }
-
     get comment() {
         return this[propZip].then((zip) => zip.comment);
     }
-
     async entry(name) {
         const zip = await this[propZip];
         return zip.entry(name);
     }
-
     async entries() {
         const zip = await this[propZip];
         return zip.entries();
     }
-
     async stream(entry) {
         const zip = await this[propZip];
         return new Promise((resolve, reject) => {
@@ -716,7 +683,6 @@ StreamZip.async = class StreamZipAsync extends events.EventEmitter {
             });
         });
     }
-
     async entryData(entry) {
         const stm = await this.stream(entry);
         return new Promise((resolve, reject) => {
@@ -731,7 +697,6 @@ StreamZip.async = class StreamZipAsync extends events.EventEmitter {
             });
         });
     }
-
     async extract(entry, outPath) {
         const zip = await this[propZip];
         return new Promise((resolve, reject) => {
@@ -744,7 +709,6 @@ StreamZip.async = class StreamZipAsync extends events.EventEmitter {
             });
         });
     }
-
     async close() {
         const zip = await this[propZip];
         return new Promise((resolve, reject) => {
@@ -758,7 +722,6 @@ StreamZip.async = class StreamZipAsync extends events.EventEmitter {
         });
     }
 };
-
 class CentralDirectoryHeader {
     read(data) {
         if (data.length !== consts.ENDHDR || data.readUInt32LE(0) !== consts.ENDSIG) {
@@ -776,7 +739,6 @@ class CentralDirectoryHeader {
         this.commentLength = data.readUInt16LE(consts.ENDCOM);
     }
 }
-
 class CentralDirectoryLoc64Header {
     read(data) {
         if (data.length !== consts.ENDL64HDR || data.readUInt32LE(0) !== consts.ENDL64SIG) {
@@ -786,7 +748,6 @@ class CentralDirectoryLoc64Header {
         this.headerOffset = readUInt64LE(data, consts.ENDSUB);
     }
 }
-
 class CentralDirectoryZip64Header {
     read(data) {
         if (data.length !== consts.END64HDR || data.readUInt32LE(0) !== consts.END64SIG) {
@@ -802,7 +763,6 @@ class CentralDirectoryZip64Header {
         this.offset = readUInt64LE(data, consts.END64OFF);
     }
 }
-
 class ZipEntry {
     readHeader(data, offset) {
         // data should be 46 bytes and start with "PK 01 02"
@@ -821,7 +781,6 @@ class ZipEntry {
         const timebytes = data.readUInt16LE(offset + consts.CENTIM);
         const datebytes = data.readUInt16LE(offset + consts.CENTIM + 2);
         this.time = parseZipTime(timebytes, datebytes);
-
         // uncompressed file crc-32 value
         this.crc = data.readUInt32LE(offset + consts.CENCRC);
         // compressed size
@@ -843,7 +802,6 @@ class ZipEntry {
         // LOC header offset
         this.offset = data.readUInt32LE(offset + consts.CENOFF);
     }
-
     readDataHeader(data) {
         // 30 bytes and should start with "PK\003\004"
         if (data.readUInt32LE(0) !== consts.LOCSIG) {
@@ -859,7 +817,6 @@ class ZipEntry {
         const timebytes = data.readUInt16LE(consts.LOCTIM);
         const datebytes = data.readUInt16LE(consts.LOCTIM + 2);
         this.time = parseZipTime(timebytes, datebytes);
-
         // uncompressed file crc-32 value
         this.crc = data.readUInt32LE(consts.LOCCRC) || this.crc;
         // compressed size
@@ -881,7 +838,6 @@ class ZipEntry {
         // extra field length
         this.extraLen = data.readUInt16LE(consts.LOCEXT);
     }
-
     read(data, offset, textDecoder) {
         const nameData = data.slice(offset, (offset += this.fnameLen));
         this.name = textDecoder
@@ -889,20 +845,17 @@ class ZipEntry {
             : nameData.toString('utf8');
         const lastChar = data[offset - 1];
         this.isDirectory = lastChar === 47 || lastChar === 92;
-
         if (this.extraLen) {
             this.readExtra(data, offset);
             offset += this.extraLen;
         }
         this.comment = this.comLen ? data.slice(offset, offset + this.comLen).toString() : null;
     }
-
     validateName() {
         if (/\\|^\w+:|^\/|(^|\/)\.\.(\/|$)/.test(this.name)) {
             throw new Error('Malicious entry: ' + this.name);
         }
     }
-
     readExtra(data, offset) {
         let signature, size;
         const maxPos = offset + this.extraLen;
@@ -914,13 +867,44 @@ class ZipEntry {
             if (consts.ID_ZIP64 === signature) {
                 this.parseZip64Extra(data, offset, size);
             }
+            if (consts.ID_UNICODE_PATH === signature) {
+                this.parseUnicodeFileName(data, offset, size);
+            }            
             offset += size;
         }
     }
 
+    parseUnicodeFileName(data, offset, length) {
+        readUInt8(data, offset) // version
+        offset += 1
+        length -= 1
+        var nameCRC32 = readUInt32LE(data, offset)
+        offset += 4
+        length -= 4
+        const nameData = data.slice(offset, (offset += length));
+        this.name = nameData.toString('utf-8')
+    }    
+
     parseZip64Extra(data, offset, length) {
         if (length >= 8 && this.size === consts.EF_ZIP64_OR_32) {
             this.size = readUInt64LE(data, offset);
+
+    
+          
+            
+    
+
+          
+          Expand Down
+          
+            
+    
+
+          
+          Expand Up
+    
+    @@ -1207,4 +1222,12 @@ function readUInt64LE(buffer, offset) {
+  
             offset += 8;
             length -= 8;
         }
@@ -939,16 +923,13 @@ class ZipEntry {
             // offset += 4; length -= 4;
         }
     }
-
     get encrypted() {
         return (this.flags & consts.FLG_ENTRY_ENC) === consts.FLG_ENTRY_ENC;
     }
-
     get isFile() {
         return !this.isDirectory;
     }
 }
-
 class FsRead {
     constructor(fd, buffer, offset, length, position, callback) {
         this.fd = fd;
@@ -960,7 +941,6 @@ class FsRead {
         this.bytesRead = 0;
         this.waiting = false;
     }
-
     read(sync) {
         StreamZip.debugLog('read', this.position, this.bytesRead, this.length, this.offset);
         this.waiting = true;
@@ -990,7 +970,6 @@ class FsRead {
             );
         }
     }
-
     readCallback(sync, err, bytesRead) {
         if (typeof bytesRead === 'number') {
             this.bytesRead += bytesRead;
@@ -1003,7 +982,6 @@ class FsRead {
         }
     }
 }
-
 class FileWindowBuffer {
     constructor(fd) {
         this.position = 0;
@@ -1011,13 +989,11 @@ class FileWindowBuffer {
         this.fd = fd;
         this.fsOp = null;
     }
-
     checkOp() {
         if (this.fsOp && this.fsOp.waiting) {
             throw new Error('Operation in progress');
         }
     }
-
     read(pos, length, callback) {
         this.checkOp();
         if (this.buffer.length < length) {
@@ -1026,7 +1002,6 @@ class FileWindowBuffer {
         this.position = pos;
         this.fsOp = new FsRead(this.fd, this.buffer, 0, length, this.position, callback).read();
     }
-
     expandLeft(length, callback) {
         this.checkOp();
         this.buffer = Buffer.concat([Buffer.alloc(length), this.buffer]);
@@ -1036,7 +1011,6 @@ class FileWindowBuffer {
         }
         this.fsOp = new FsRead(this.fd, this.buffer, 0, length, this.position, callback).read();
     }
-
     expandRight(length, callback) {
         this.checkOp();
         const offset = this.buffer.length;
@@ -1050,7 +1024,6 @@ class FileWindowBuffer {
             callback
         ).read();
     }
-
     moveRight(length, callback, shift) {
         this.checkOp();
         if (shift) {
@@ -1069,7 +1042,6 @@ class FileWindowBuffer {
         ).read();
     }
 }
-
 class EntryDataReaderStream extends stream.Readable {
     constructor(fd, offset, length) {
         super();
@@ -1079,7 +1051,6 @@ class EntryDataReaderStream extends stream.Readable {
         this.pos = 0;
         this.readCallback = this.readCallback.bind(this);
     }
-
     _read(n) {
         const buffer = Buffer.alloc(Math.min(n, this.length - this.pos));
         if (buffer.length) {
@@ -1088,7 +1059,6 @@ class EntryDataReaderStream extends stream.Readable {
             this.push(null);
         }
     }
-
     readCallback(err, bytesRead, buffer) {
         this.pos += bytesRead;
         if (err) {
@@ -1104,7 +1074,6 @@ class EntryDataReaderStream extends stream.Readable {
         }
     }
 }
-
 class EntryVerifyStream extends stream.Transform {
     constructor(baseStm, crc, size) {
         super();
@@ -1113,7 +1082,6 @@ class EntryVerifyStream extends stream.Transform {
             this.emit('error', e);
         });
     }
-
     _transform(data, encoding, callback) {
         let err;
         try {
@@ -1124,7 +1092,6 @@ class EntryVerifyStream extends stream.Transform {
         callback(err, data);
     }
 }
-
 class CrcVerify {
     constructor(crc, size) {
         this.crc = crc;
@@ -1134,7 +1101,6 @@ class CrcVerify {
             size: 0,
         };
     }
-
     data(data) {
         const crcTable = CrcVerify.getCrcTable();
         let crc = this.state.crc;
@@ -1157,7 +1123,6 @@ class CrcVerify {
             }
         }
     }
-
     static getCrcTable() {
         let crcTable = CrcVerify.crcTable;
         if (!crcTable) {
@@ -1182,11 +1147,9 @@ class CrcVerify {
         return crcTable;
     }
 }
-
 function parseZipTime(timebytes, datebytes) {
     const timebits = toBits(timebytes, 16);
     const datebits = toBits(datebytes, 16);
-
     const mt = {
         h: parseInt(timebits.slice(0, 5).join(''), 2),
         m: parseInt(timebits.slice(5, 11).join(''), 2),
@@ -1198,7 +1161,6 @@ function parseZipTime(timebytes, datebytes) {
     const dt_str = [mt.Y, mt.M, mt.D].join('-') + ' ' + [mt.h, mt.m, mt.s].join(':') + ' GMT+0';
     return new Date(dt_str).getTime();
 }
-
 function toBits(dec, size) {
     let b = (dec >>> 0).toString(2);
     while (b.length < size) {
@@ -1206,9 +1168,16 @@ function toBits(dec, size) {
     }
     return b.split('');
 }
-
 function readUInt64LE(buffer, offset) {
     return buffer.readUInt32LE(offset + 4) * 0x0000000100000000 + buffer.readUInt32LE(offset);
+}
+
+function readUInt32LE(buffer, offset) {
+    return buffer.readUInt32LE(offset);
+}
+
+function readUInt8(buffer, offset) {
+    return buffer.readUInt8(offset)
 }
 
 module.exports = StreamZip;
