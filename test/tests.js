@@ -485,6 +485,32 @@ module.exports['async.entryData'] = async (test) => {
     test.done();
 };
 
+module.exports['async.close'] = async (test) => {
+    test.expect(2);
+    const fd = fs.openSync('test/ok/normal.zip', 'r');
+    const zip = new StreamZip.async({ fd });
+    test.equal(await zip.entriesCount, 10);
+    await zip.close();
+    test.throws(() => fs.fstatSync(fd), /EBADF/);
+    test.done();
+};
+
+module.exports['async.close on a bad archive'] = async (test) => {
+    test.expect(3);
+    const fd = fs.openSync('test/err/rar.rar', 'r');
+    const zip = new StreamZip.async({ fd });
+    try {
+        await zip.entries();
+        test.ok(false, 'Should throw an error');
+    } catch (e) {
+        test.equal(e.message, 'Bad archive');
+    }
+    test.ok(fs.fstatSync(fd));
+    await zip.close();
+    test.throws(() => fs.fstatSync(fd), /EBADF/);
+    test.done();
+};
+
 module.exports.setUp = function (done) {
     testPathTmp = basePathTmp + testNum++ + '/';
     if (!fs.existsSync(basePathTmp)) {

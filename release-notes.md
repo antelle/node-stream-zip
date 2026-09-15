@@ -1,5 +1,9 @@
 Release notes
 -------------
+##### v1.16.1 (2026-09-15)
+`-` fix #96, #94: file handle leak in the async API when the archive could not be read  
+`*` async `close()` now resolves instead of rejecting when the archive could not be read, matching the callback API  
+
 ##### v1.16.0 (2026-07-22)
 `+` fixed reading compressed entry size to prevent exploitation reported by @DumDumSu  
 `*` updated dependencies  
