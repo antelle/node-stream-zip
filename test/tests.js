@@ -408,6 +408,91 @@ module.exports.error['mismatched local header sizes'] = function (test) {
     });
 };
 
+const endHeaderLength = 22;
+const zip64LocatorLength = 20;
+const zip64EndHeaderLength = 56;
+
+function endHeaderWithZip64Sentinel() {
+    const endHeader = Buffer.alloc(endHeaderLength);
+    endHeader.writeUInt32LE(0x06054b50, 0);
+    endHeader.writeUInt32LE(0xffffffff, 12);
+    return endHeader;
+}
+
+function zip64Locator() {
+    const locator = Buffer.alloc(zip64LocatorLength);
+    locator.writeUInt32LE(0x07064b50, 0);
+    return locator;
+}
+
+module.exports.error['truncated zip64 record'] = function (test) {
+    test.expect(1);
+    const file = testPathTmp + 'truncated-zip64-record.zip';
+    const zip64EndHeader = Buffer.alloc(4);
+    zip64EndHeader.writeUInt32LE(0x06064b50, 0);
+
+    fs.writeFileSync(
+        file,
+        Buffer.concat([zip64EndHeader, zip64Locator(), endHeaderWithZip64Sentinel()])
+    );
+    const zip = new StreamZip({ file });
+    zip.on('ready', () => {
+        test.ok(false, 'Should throw an error');
+    });
+    zip.on('error', (err) => {
+        test.equal(err.message, 'Invalid central directory');
+        test.done();
+    });
+};
+
+module.exports.error['truncated zip64 locator'] = function (test) {
+    test.expect(1);
+    const file = testPathTmp + 'truncated-zip64-locator.zip';
+    const chunkSize = 1024;
+    // fewer than zip64LocatorLength bytes in front of the end header, so the locator has to be
+    // sought in a second, asynchronous window read
+    const endHeaderOffsetInWindow = 10;
+    const comment = Buffer.alloc(chunkSize - endHeaderLength - endHeaderOffsetInWindow);
+    const padding = Buffer.alloc(chunkSize * 2 - endHeaderLength - comment.length);
+    padding.writeUInt32LE(0x07064b50, chunkSize - 4);
+    const endHeader = endHeaderWithZip64Sentinel();
+    endHeader.writeUInt16LE(comment.length, 20);
+
+    fs.writeFileSync(file, Buffer.concat([padding, endHeader, comment]));
+    const zip = new StreamZip({ file, chunkSize });
+    zip.on('ready', () => {
+        test.ok(false, 'Should throw an error');
+    });
+    zip.on('error', (err) => {
+        test.equal(err.message, 'Invalid zip64 central directory locator');
+        test.done();
+    });
+};
+
+module.exports.error['out-of-range zip64 offset'] = function (test) {
+    test.expect(2);
+    const file = testPathTmp + 'out-of-range-zip64-offset.zip';
+    const zip64EndHeader = Buffer.alloc(zip64EndHeaderLength);
+    zip64EndHeader.writeUInt32LE(0x06064b50, 0);
+    zip64EndHeader.writeUInt32LE(1, 24);
+    zip64EndHeader.writeUInt32LE(1, 32);
+    zip64EndHeader.writeUInt32LE(0x100000, 48);
+
+    fs.writeFileSync(
+        file,
+        Buffer.concat([zip64EndHeader, zip64Locator(), endHeaderWithZip64Sentinel()])
+    );
+    const zip = new StreamZip({ file });
+    zip.on('ready', () => {
+        test.ok(false, 'Should throw an error');
+    });
+    zip.on('error', (err) => {
+        test.ok(err);
+        test.equal(zip.entriesCount, 1, 'the zip64 record was read before the failing entry read');
+        test.done();
+    });
+};
+
 module.exports.parallel = {};
 module.exports.parallel['streaming 100 files'] = function (test) {
     const num = 100;

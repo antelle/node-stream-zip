@@ -1,5 +1,8 @@
 Release notes
 -------------
+##### v1.16.1 (2026-09-15)
+`-` fix #112: emitting an error instead of throwing on a malformed zip64 record  
+
 ##### v1.16.0 (2026-07-22)
 `+` fixed reading compressed entry size to prevent exploitation reported by @DumDumSu  
 `*` updated dependencies  
