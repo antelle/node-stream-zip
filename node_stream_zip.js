@@ -667,6 +667,7 @@ StreamZip.debugLog = (...args) => {
 util.inherits(StreamZip, events.EventEmitter);
 
 const propZip = Symbol('zip');
+const propZipInstance = Symbol('zipInstance');
 
 StreamZip.async = class StreamZipAsync extends events.EventEmitter {
     constructor(config) {
@@ -677,6 +678,7 @@ StreamZip.async = class StreamZipAsync extends events.EventEmitter {
         zip.on('entry', (entry) => this.emit('entry', entry));
         zip.on('extract', (entry, outPath) => this.emit('extract', entry, outPath));
 
+        this[propZipInstance] = zip;
         this[propZip] = new Promise((resolve, reject) => {
             zip.on('ready', () => {
                 zip.removeListener('error', reject);
@@ -746,9 +748,9 @@ StreamZip.async = class StreamZipAsync extends events.EventEmitter {
     }
 
     async close() {
-        const zip = await this[propZip];
+        await this[propZip].catch(() => {});
         return new Promise((resolve, reject) => {
-            zip.close((err) => {
+            this[propZipInstance].close((err) => {
                 if (err) {
                     reject(err);
                 } else {
