@@ -189,7 +189,11 @@ const StreamZip = function (config) {
                 if (buffer.readUInt32LE(bufferPosition) === op.sig) {
                     op.lastBufferPosition = bufferPosition;
                     op.lastBytesRead = bytesRead;
-                    op.complete();
+                    try {
+                        op.complete();
+                    } catch (ex) {
+                        that.emit('error', ex);
+                    }
                     return;
                 }
             }
