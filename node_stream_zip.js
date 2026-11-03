@@ -510,7 +510,7 @@ const StreamZip = function (config) {
                         return callback(err);
                     }
                     if (errThrown) {
-                        fs.close(fd, () => {
+                        fs.close(fdFile, () => {
                             callback(errThrown);
                         });
                         return;
