@@ -302,6 +302,66 @@ module.exports.error['corrupt_entry.zip'] = function (test) {
         });
     });
 };
+module.exports.error['stream error before output open completes'] = function (test) {
+    const realFs = { ...fs };
+    const closed = [];
+    let outputFd;
+    let finishOpen;
+    let streamError;
+    StreamZip.setFs({
+        ...realFs,
+        open(file, flags, callback) {
+            realFs.open(file, flags, (err, fd) => {
+                if (flags !== 'w' || err) {
+                    return callback(err, fd);
+                }
+                outputFd = fd;
+                finishOpen = () => callback(null, fd);
+                if (streamError) {
+                    finishOpen();
+                }
+            });
+        },
+        close(fd, callback) {
+            closed.push(fd);
+            realFs.close(fd, callback);
+        },
+    });
+    const zip = new StreamZip({ file: 'test/err/corrupt_entry.zip' });
+    zip.on('ready', () => {
+        const originalStream = zip.stream;
+        zip.stream = function (entry, callback) {
+            originalStream.call(zip, entry, (err, stream) => {
+                if (!err) {
+                    stream.once('error', (error) => {
+                        streamError = error;
+                        // Let extract's error handler run before completing fs.open.
+                        process.nextTick(() => {
+                            if (finishOpen) {
+                                finishOpen();
+                            }
+                        });
+                    });
+                }
+                callback(err, stream);
+            });
+        };
+        zip.extract('doc/api_assets/logo.svg', testPathTmp + 'out.svg', (err) => {
+            test.strictEqual(err, streamError);
+            test.ok(closed.includes(outputFd), 'closes the output descriptor');
+            test.equal(closed.length, 1, 'closes only the output descriptor');
+            // Clean up the leaked output as well when running against the old code.
+            if (!closed.includes(outputFd)) {
+                realFs.closeSync(outputFd);
+            }
+            zip.close((closeError) => {
+                StreamZip.setFs(realFs);
+                test.ifError(closeError, 'archive descriptor remains valid until close');
+                test.done();
+            });
+        });
+    });
+};
 module.exports.error['bad_crc.zip'] = function (test) {
     test.expect(2);
     const zip = new StreamZip({ file: 'test/err/bad_crc.zip' });
