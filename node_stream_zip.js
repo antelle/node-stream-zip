@@ -463,6 +463,9 @@ const StreamZip = function (config) {
         if (!fd) {
             return callback(new Error('Archive closed'));
         }
+        if (entry.offset > fileSize) {
+            return callback(new Error('Invalid entry offset'));
+        }
         const buffer = Buffer.alloc(consts.LOCHDR);
         new FsRead(fd, buffer, 0, buffer.length, entry.offset, (err) => {
             if (err) {
